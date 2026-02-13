@@ -39,6 +39,12 @@ Thumbs.db
 .cache/
 .tmp/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
 # Database
 *.db
 *.sqlite
