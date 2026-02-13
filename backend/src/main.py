@@ -22,6 +22,7 @@ from db import Database
 from models import *
 from auth import AuthManager
 from recommendations import RecommendationEngine
+from youtube_api import YouTubeAPI
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -49,11 +50,12 @@ cache: Optional[AudioCache] = None
 db: Optional[Database] = None
 auth_manager: Optional[AuthManager] = None
 recommendation_engine: Optional[RecommendationEngine] = None
+youtube_api: Optional[YouTubeAPI] = None
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup"""
-    global downloader, cache, db, auth_manager, recommendation_engine
+    global downloader, cache, db, auth_manager, recommendation_engine, youtube_api
 
     # Initialize database
     db = Database()
@@ -72,6 +74,10 @@ async def startup_event():
     # Initialize recommendation engine
     recommendation_engine = RecommendationEngine(db)
 
+    # Initialize YouTube API
+    api_key = os.getenv('YOUTUBE_API_KEY')
+    youtube_api = YouTubeAPI(api_key=api_key)
+
     logger.info("Services initialized")
 
 @app.on_event("shutdown")
@@ -86,9 +92,65 @@ async def root():
     """Health check endpoint"""
     return {"message": "YouTube Music Proxy API is running"}
 
+@app.get("/auth/login")
+async def login():
+    """Initiate OAuth2 login flow"""
+    if not auth_manager:
+        raise HTTPException(status_code=500, detail="Auth manager not initialized")
+
+    auth_url = auth_manager.get_auth_url()
+    return {"auth_url": auth_url}
+
+@app.get("/callback")
+async def oauth_callback(code: str, state: str):
+    """Handle OAuth2 callback"""
+    if not auth_manager:
+        raise HTTPException(status_code=500, detail="Auth manager not initialized")
+
+    try:
+        session_data = await auth_manager.handle_callback(code, state)
+        return {"message": "Authentication successful", "session": session_data}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/auth/logout")
+async def logout():
+    """Logout user"""
+    if not auth_manager:
+        raise HTTPException(status_code=500, detail="Auth manager not initialized")
+
+    auth_manager.clear_session()
+    return {"message": "Logged out successfully"}
+
+@app.get("/auth/status")
+async def auth_status():
+    """Check authentication status"""
+    if not auth_manager:
+        raise HTTPException(status_code=500, detail="Auth manager not initialized")
+
+    is_authenticated = auth_manager.is_authenticated()
+    return {"authenticated": is_authenticated}
+
 @app.get("/api/search")
 async def search_videos(query: str, max_results: int = 10):
     """Search YouTube videos"""
+    global youtube_api, auth_manager
+
+    # Try to use YouTube API if authenticated
+    if youtube_api and auth_manager and auth_manager.is_authenticated():
+        try:
+            # Refresh access token if needed
+            access_token = auth_manager.get_access_token()
+            if access_token:
+                youtube_api.access_token = access_token
+                youtube_api._initialize_service()
+
+            results = await youtube_api.search_videos(query, max_results)
+            return SearchResult(results=[VideoInfo(**result) for result in results])
+        except Exception as e:
+            logger.warning(f"YouTube API search failed, falling back to yt-dlp: {e}")
+
+    # Fallback to yt-dlp search
     try:
         results = await downloader.search(query, max_results)
         return SearchResult(results=[VideoInfo(**result) for result in results])
@@ -302,6 +364,79 @@ async def clear_cache():
         return result
     except Exception as e:
         logger.error(f"Failed to clear cache: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# YouTube API endpoints
+@app.get("/api/youtube/playlists")
+async def get_youtube_playlists():
+    """Get user's YouTube playlists"""
+    global youtube_api, auth_manager
+
+    if not youtube_api or not auth_manager:
+        raise HTTPException(status_code=500, detail="Services not initialized")
+
+    if not auth_manager.is_authenticated():
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    try:
+        # Refresh access token if needed
+        access_token = auth_manager.get_access_token()
+        if access_token:
+            youtube_api.access_token = access_token
+            youtube_api._initialize_service()
+
+        playlists = await youtube_api.get_user_playlists()
+        return playlists
+    except Exception as e:
+        logger.error(f"Failed to get YouTube playlists: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/youtube/playlists/{playlist_id}/items")
+async def get_youtube_playlist_items(playlist_id: str):
+    """Get items in a YouTube playlist"""
+    global youtube_api, auth_manager
+
+    if not youtube_api or not auth_manager:
+        raise HTTPException(status_code=500, detail="Services not initialized")
+
+    if not auth_manager.is_authenticated():
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    try:
+        # Refresh access token if needed
+        access_token = auth_manager.get_access_token()
+        if access_token:
+            youtube_api.access_token = access_token
+            youtube_api._initialize_service()
+
+        items = await youtube_api.get_playlist_items(playlist_id)
+        return items
+    except Exception as e:
+        logger.error(f"Failed to get YouTube playlist items: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/youtube/liked-videos")
+async def get_youtube_liked_videos():
+    """Get user's liked videos"""
+    global youtube_api, auth_manager
+
+    if not youtube_api or not auth_manager:
+        raise HTTPException(status_code=500, detail="Services not initialized")
+
+    if not auth_manager.is_authenticated():
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    try:
+        # Refresh access token if needed
+        access_token = auth_manager.get_access_token()
+        if access_token:
+            youtube_api.access_token = access_token
+            youtube_api._initialize_service()
+
+        videos = await youtube_api.get_user_liked_videos()
+        return videos
+    except Exception as e:
+        logger.error(f"Failed to get YouTube liked videos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
