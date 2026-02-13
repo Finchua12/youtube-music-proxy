@@ -1,0 +1,35 @@
+{
+  "name": "youtube-music-proxy",
+  "version": "1.0.0",
+  "description": "CachyOS desktop application for streaming YouTube music without ads",
+  "author": "YouTube Music Proxy Team",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "lint": "eslint . --ext .ts,.vue",
+    "lint:fix": "eslint . --ext .ts,.vue --fix"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.6.0",
+    "axios": "^1.6.7",
+    "howler": "^2.2.4",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.15",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.6.3",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.21.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.4.21",
+    "vue-tsc": "^1.8.27"
+  }
+}

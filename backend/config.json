@@ -1,0 +1,8 @@
+{
+  "cache_dir": "~/.cache/youtube-music",
+  "max_cache_size_gb": 5,
+  "audio_quality": "192k",
+  "auto_cleanup": true,
+  "server_host": "127.0.0.1",
+  "server_port": 8000
+}
