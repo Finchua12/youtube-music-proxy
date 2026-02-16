@@ -3,24 +3,22 @@
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "src": "/api/(.*)",
+      "dest": "/api/index.py",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+      }
     },
     {
-      "source": "/((?!api).*)",
-      "destination": "/frontend/dist/index.html"
-    }
-  ],
-  "headers": [
+      "handle": "filesystem"
+    },
     {
-      "source": "/api/(.*)",
-      "headers": [
-        {"key": "Access-Control-Allow-Origin", "value": "*"},
-        {"key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS"},
-        {"key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization"}
-      ]
+      "src": "/(.*)",
+      "dest": "/frontend/dist/$1"
     }
   ]
 }
