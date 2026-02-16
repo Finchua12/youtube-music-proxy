@@ -11,6 +11,14 @@ module.exports = async (req, res) => {
     return;
   }
   
+  // Test endpoint
+  if (url === '/api/test') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ test: 'ok' }));
+    return;
+  }
+  
   try {
     // Search endpoint
     if (url.includes('/api/search')) {
@@ -40,50 +48,11 @@ module.exports = async (req, res) => {
       return;
     }
     
-    // Playlists
-    if (url.includes('/api/playlists') && req.method === 'GET') {
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify([]));
-      return;
-    }
-    
-    // Auth
-    if (url.includes('/api/auth/url')) {
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ auth_url: 'https://accounts.google.com/o/oauth2/auth' }));
-      return;
-    }
-    
-    if (url.includes('/api/auth/status')) {
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ authenticated: false }));
-      return;
-    }
-    
-    // Stream URL
-    if (url.includes('/api/stream/')) {
-      const videoId = url.split('/api/stream/')[1]?.split('?')[0];
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({
-        video_id: videoId,
-        audio_url: `https://vid.puffyan.us/latest_version?id=${videoId}&itag=140`
-      }));
-      return;
-    }
-    
     // Root API
     if (url === '/api' || url === '/api/') {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ 
-        status: 'ok', 
-        message: 'YouTube Music Proxy API',
-        endpoints: ['/api/search', '/api/playlists', '/api/auth/url', '/api/auth/status', '/api/stream/:id']
-      }));
+      res.end(JSON.stringify({ status: 'ok' }));
       return;
     }
     
@@ -94,6 +63,6 @@ module.exports = async (req, res) => {
   } catch (error) {
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: error.message, stack: error.stack }));
+    res.end(JSON.stringify({ error: error.toString() }));
   }
 };
