@@ -18,7 +18,6 @@ module.exports = async (req, res) => {
       const q = urlObj.searchParams.get('q') || '';
       const maxResults = parseInt(urlObj.searchParams.get('max_results') || '10');
       
-      // Use Invidious API (no API key needed)
       const response = await fetch(
         `https://vid.puffyan.us/api/v1/search?q=${encodeURIComponent(q)}&type=video&limit=${maxResults}`
       );
@@ -95,6 +94,6 @@ module.exports = async (req, res) => {
   } catch (error) {
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: error.message }));
+    res.end(JSON.stringify({ error: error.message, stack: error.stack }));
   }
 };
