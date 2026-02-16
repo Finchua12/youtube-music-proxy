@@ -295,11 +295,17 @@ async def get_auth_url():
 async def auth_callback(code: str, state: str):
     """Handle OAuth2 callback"""
     try:
-        success = auth_manager.handle_callback(code, state)
-        if success:
-            return {"message": "Authentication successful"}
-        else:
-            raise HTTPException(status_code=400, detail="Authentication failed")
+        session_data = await auth_manager.handle_callback(code, state)
+        return {
+            "message": "Authentication successful",
+            "access_token": session_data.get('access_token'),
+            "refresh_token": session_data.get('refresh_token'),
+            "expires_at": session_data.get('expires_at'),
+            "token_type": session_data.get('token_type', 'Bearer')
+        }
+    except ValueError as e:
+        logger.error(f"Auth callback validation failed: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Auth callback failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))

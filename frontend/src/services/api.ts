@@ -81,7 +81,11 @@ export const authApi = {
   login: (code: string) => apiClient.post('/auth/login', { code }),
   logout: () => apiClient.post('/auth/logout'),
   refresh: () => apiClient.post('/auth/refresh'),
-  getUser: () => apiClient.get('/auth/user')
+  getUser: () => apiClient.get('/auth/user'),
+  getAuthUrl: () => apiClient.get('/auth/url'),
+  handleCallback: (code: string, state: string) => 
+    apiClient.get(`/auth/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`),
+  getStatus: () => apiClient.get('/auth/status')
 }
 
 export default apiClient

@@ -85,29 +85,38 @@
     </nav>
 
     <div class="user-profile">
-      <div class="profile-info">
-        <div class="avatar">
+      <div v-if="isAuthenticated || isGuest" class="profile-info">
+        <div class="avatar" :class="{ 'avatar-guest': isGuest }">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
             <path d="M5 20C5 16.134 8.13401 13 12 13C15.866 13 19 16.134 19 20" stroke="currentColor" stroke-width="2"/>
           </svg>
         </div>
         <div class="user-details">
-          <div class="username">Користувач</div>
-          <div class="status">Особистий акаунт</div>
+          <div class="username">{{ isGuest ? 'Гість' : 'Користувач' }}</div>
+          <div class="status">{{ isGuest ? 'Обмежений доступ' : 'Особистий акаунт' }}</div>
         </div>
       </div>
-      <button class="settings-btn">
+      
+      <div v-else class="profile-info" @click="login" style="cursor: pointer;">
+        <div class="avatar avatar-login">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="10 17 15 12 10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="user-details">
+          <div class="username" style="color: #ff0000;">Увійти</div>
+          <div class="status">Отримати повний доступ</div>
+        </div>
+      </div>
+      
+      <button v-if="isAuthenticated || isGuest" class="settings-btn" @click="logout" title="Вийти">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-          <path d="M12 1V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M12 21V23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M4.22 4.22L5.64 5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M18.36 18.36L19.78 19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M1 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M21 12H23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M4.22 19.78L5.64 18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
     </div>
@@ -115,7 +124,41 @@
 </template>
 
 <script setup lang="ts">
-// This component doesn't require any logic for now
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const isAuthenticated = ref(false)
+const isGuest = ref(false)
+
+onMounted(() => {
+  checkAuthStatus()
+})
+
+const checkAuthStatus = () => {
+  const token = localStorage.getItem('access_token')
+  const authMode = localStorage.getItem('auth_mode')
+  
+  isAuthenticated.value = !!token
+  isGuest.value = authMode === 'guest'
+}
+
+const login = () => {
+  router.push('/login')
+}
+
+const logout = () => {
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('expires_at')
+  localStorage.removeItem('auth_mode')
+  
+  isAuthenticated.value = false
+  isGuest.value = false
+  
+  // Перезавантажуємо сторінку для очищення стану
+  window.location.reload()
+}
 </script>
 
 <style scoped>
@@ -274,6 +317,16 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
+}
+
+.avatar-guest {
+  background: #666;
+}
+
+.avatar-login {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff0000;
+  border: 1px solid rgba(255, 0, 0, 0.3);
 }
 
 .user-details {
