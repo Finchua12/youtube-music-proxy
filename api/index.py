@@ -5,20 +5,33 @@ Entry point for YouTube Music Proxy backend on Vercel
 
 import sys
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Add backend/src to path
 backend_path = os.path.join(os.path.dirname(__file__), '..', 'backend', 'src')
-if backend_path not in sys.path:
+if os.path.exists(backend_path) and backend_path not in sys.path:
     sys.path.insert(0, backend_path)
 
 # Import the simplified FastAPI app
-from main import app
+try:
+    from main import app
+    logger.info("Successfully imported main app")
+except Exception as e:
+    logger.error(f"Failed to import main: {e}")
+    # If import fails, create a minimal app
+    from fastapi import FastAPI
+    app = FastAPI()
+    
+    @app.get("/")
+    async def root():
+        return {"error": str(e), "status": "error"}
+    
+    @app.get("/api/search")
+    async def search():
+        return {"results": [], "error": "Backend not loaded"}
 
-# For Vercel serverless functions
-from mangum import Mangum
-
-# Create handler for Vercel
-handler = Mangum(app, lifespan="off")
-
-# Export for Vercel
-app = app
+# For Vercel Python runtime - export app
+# The app will be loaded automatically
