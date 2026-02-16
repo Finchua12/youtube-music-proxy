@@ -1,0 +1,6 @@
+{
+  "handler": "index.py",
+  "runtime": "python3.12",
+  "endpoint": "index.py",
+  "method": "GET"
+}
