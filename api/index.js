@@ -1,12 +1,4 @@
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-export default async function handler(req, res) {
-  const url = req.url || '';
-  
+export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -16,37 +8,12 @@ export default async function handler(req, res) {
     return;
   }
   
-  try {
-    // Search endpoint
-    if (url.includes('/api/search')) {
-      const urlObj = new URL(url, 'https://example.com');
-      const q = urlObj.searchParams.get('q') || '';
-      const maxResults = parseInt(urlObj.searchParams.get('max_results') || '10');
-      
-      const response = await fetch(
-        `https://vid.puffyan.us/api/v1/search?q=${encodeURIComponent(q)}&type=video&limit=${maxResults}`
-      );
-      const data = await response.json();
-      
-      const results = data
-        .filter(item => item.type === 'video')
-        .slice(0, maxResults)
-        .map(item => ({
-          id: item.videoId,
-          title: item.title,
-          artist: item.author,
-          thumbnail: item.videoThumbnails?.[0]?.url || '',
-          duration: parseInt(item.lengthSeconds) || 0
-        }));
-      
-      res.status(200).json({ results });
-      return;
-    }
-    
-    // Root
-    res.status(200).json({ status: 'ok' });
-    
-  } catch (error) {
-    res.status(500).json({ error: error.toString() });
-  }
+  // Return mock data for testing
+  res.status(200).json({
+    results: [
+      { id: 'test1', title: 'Test Song 1', artist: 'Artist 1', thumbnail: '', duration: 180 },
+      { id: 'test2', title: 'Test Song 2', artist: 'Artist 2', thumbnail: '', duration: 240 },
+      { id: 'test3', title: 'Test Song 3', artist: 'Artist 3', thumbnail: '', duration: 200 }
+    ]
+  });
 }
