@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import Home from './pages/Home.vue'
@@ -12,7 +12,7 @@ import Callback from './pages/Callback.vue'
 // Import styles
 import './styles/main.css'
 
-// Create router
+// Create router with hash history for better SPA compatibility
 const routes = [
   { path: '/', component: Home },
   { path: '/search', component: Search },
@@ -23,7 +23,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes
 })
 
