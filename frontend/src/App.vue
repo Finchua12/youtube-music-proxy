@@ -33,14 +33,15 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrent } from '@tauri-apps/api/window'
 import { onMounted } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import Sidebar from './components/Sidebar.vue'
 import PlayerBar from './components/PlayerBar.vue'
 
 const playerStore = usePlayerStore()
-const appWindow = getCurrent()
+
+// Check if running in Tauri
+const isTauri = typeof window !== 'undefined' && window.__TAURI__
 
 // Load initial data
 onMounted(async () => {
@@ -50,19 +51,31 @@ onMounted(async () => {
 })
 
 const minimizeWindow = () => {
-  appWindow.minimize()
+  if (isTauri) {
+    import('@tauri-apps/api/window').then(({ getCurrent }) => {
+      getCurrent().minimize()
+    })
+  }
 }
 
 const toggleMaximize = async () => {
-  if (await appWindow.isMaximized()) {
-    appWindow.unmaximize()
-  } else {
-    appWindow.maximize()
+  if (isTauri) {
+    const { getCurrent } = await import('@tauri-apps/api/window')
+    const win = getCurrent()
+    if (await win.isMaximized()) {
+      win.unmaximize()
+    } else {
+      win.maximize()
+    }
   }
 }
 
 const closeWindow = () => {
-  appWindow.close()
+  if (isTauri) {
+    import('@tauri-apps/api/window').then(({ getCurrent }) => {
+      getCurrent().close()
+    })
+  }
 }
 </script>
 
