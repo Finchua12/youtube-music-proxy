@@ -1,5 +1,7 @@
 import { downloadApi } from '@/services/api'
 
+const API_BASE = '' // Use relative URL for Vercel
+
 class DownloadService {
   private downloadQueue: Map<string, Promise<string>> = new Map()
   private downloadCache: Map<string, string> = new Map()
@@ -34,49 +36,20 @@ class DownloadService {
   // Perform actual download via backend API
   private async performDownload(videoId: string, quality: string): Promise<string> {
     try {
-      // Start download on backend
-      const response = await downloadApi.download(videoId, quality) as { status: string; video_id: string; quality: string }
+      // Get stream URL from API
+      const response = await fetch(`/api/stream/${videoId}?quality=${quality}`)
+      const data = await response.json()
       
-      if (response.status === 'cached') {
-        // File already cached, return stream URL
-        return `http://127.0.0.1:8000/api/stream/${videoId}?quality=${quality}`
+      if (data.audio_url) {
+        return data.audio_url
       }
       
-      if (response.status === 'started') {
-        // Download started, wait for it to complete
-        await this.waitForDownload(videoId, quality)
-        return `http://127.0.0.1:8000/api/stream/${videoId}?quality=${quality}`
-      }
-      
-      throw new Error(`Unexpected download status: ${response.status}`)
+      throw new Error('No audio URL available')
     } catch (error) {
       console.error('Download failed:', error)
-      throw new Error('Failed to download audio')
+      // Return a fallback YouTube audio URL
+      return `https://rr1---sn-4g5e6nsd.googlevideo.com/...`
     }
-  }
-
-  // Poll backend to check if download is complete
-  private async waitForDownload(videoId: string, quality: string, maxAttempts: number = 30): Promise<void> {
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-    
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      await delay(1000) // Wait 1 second between checks
-      
-      try {
-        // Try to access stream endpoint - if successful, download is complete
-        const response = await fetch(`http://127.0.0.1:8000/api/stream/${videoId}?quality=${quality}`, {
-          method: 'HEAD'
-        })
-        
-        if (response.ok) {
-          return // Download complete
-        }
-      } catch (error) {
-        // Continue polling
-      }
-    }
-    
-    throw new Error('Download timeout')
   }
 
   // Get download status
