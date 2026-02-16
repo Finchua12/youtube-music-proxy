@@ -10,8 +10,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Add backend/src to path
-backend_path = os.path.join(os.path.dirname(__file__), '..', 'backend', 'src')
+# Add backend/src to path  
+backend_path = os.path.join(os.path.dirname(__file__), 'backend', 'src')
 if os.path.exists(backend_path) and backend_path not in sys.path:
     sys.path.insert(0, backend_path)
 
@@ -21,7 +21,6 @@ try:
     logger.info("Successfully imported main app")
 except Exception as e:
     logger.error(f"Failed to import main: {e}")
-    # If import fails, create a minimal app
     from fastapi import FastAPI
     app = FastAPI()
     
@@ -32,6 +31,3 @@ except Exception as e:
     @app.get("/api/search")
     async def search():
         return {"results": [], "error": "Backend not loaded"}
-
-# For Vercel Python runtime - export app
-# The app will be loaded automatically
