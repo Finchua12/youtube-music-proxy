@@ -439,6 +439,63 @@ async def get_youtube_liked_videos():
         logger.error(f"Failed to get YouTube liked videos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Likes/Favorites endpoints
+@app.post("/api/likes/{video_id}")
+async def add_like(video_id: str, title: str = ""):
+    """Add video to likes/favorites"""
+    global db
+    if not db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    try:
+        await db.add_like(video_id, title)
+        return {"message": "Added to favorites", "video_id": video_id}
+    except Exception as e:
+        logger.error(f"Failed to add like: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/likes/{video_id}")
+async def remove_like(video_id: str):
+    """Remove video from likes/favorites"""
+    global db
+    if not db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    try:
+        await db.remove_like(video_id)
+        return {"message": "Removed from favorites", "video_id": video_id}
+    except Exception as e:
+        logger.error(f"Failed to remove like: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/likes")
+async def get_likes(limit: int = 100):
+    """Get user's liked videos"""
+    global db
+    if not db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    try:
+        likes = await db.get_likes(limit)
+        return {"likes": likes}
+    except Exception as e:
+        logger.error(f"Failed to get likes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/likes/{video_id}/status")
+async def check_like_status(video_id: str):
+    """Check if video is liked"""
+    global db
+    if not db:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    try:
+        is_liked = await db.is_liked(video_id)
+        return {"video_id": video_id, "is_liked": is_liked}
+    except Exception as e:
+        logger.error(f"Failed to check like status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",

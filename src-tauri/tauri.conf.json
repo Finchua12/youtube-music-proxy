@@ -12,7 +12,14 @@
   },
   "tauri": {
     "allowlist": {
-      "all": false
+      "all": false,
+      "window": {
+        "all": true
+      },
+      "shell": {
+        "all": false,
+        "open": true
+      }
     },
     "bundle": {
       "active": true,
@@ -31,10 +38,15 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 800,
+        "minHeight": 600,
         "resizable": true,
         "title": "YouTube Music Proxy",
-        "width": 800
+        "width": 1200,
+        "minWidth": 800,
+        "center": true,
+        "decorations": false,
+        "transparent": false
       }
     ]
   }
