@@ -33,10 +33,5 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 
-// Initialize audio player
-const playerStore = pinia.state.value.playerStore
-if (playerStore) {
-  playerStore.initialize()
-}
-
+// Mount app
 app.mount('#app')
