@@ -1,6 +1,16 @@
 const YOUTUBE_API_KEY = 'AIzaSyD9jUj4E5KyF6h7kd1GeFj8dR63HCmKmKg';
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 
+function parseDuration(durationStr) {
+  if (!durationStr) return 0;
+  const match = durationStr.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+  if (!match) return 0;
+  const hours = parseInt(match[1]) || 0;
+  const minutes = parseInt(match[2]) || 0;
+  const seconds = parseInt(match[3]) || 0;
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -13,23 +23,40 @@ export default async function handler(req, res) {
   
   const url = req.url || '';
   
-  // Search
+  // Search with duration
   if (url.includes('/api/search')) {
     const q = new URL(url, 'https://example.com').searchParams.get('q') || '';
     
     try {
-      const response = await fetch(
-        `${YOUTUBE_API_BASE}/search?part=snippet&type=video&q=${encodeURIComponent(q)}&maxResults=20&key=${YOUTUBE_API_KEY}`
+      // First get search results
+      const searchResponse = await fetch(
+        `${YOUTUBE_API_BASE}/search?part=snippet&type=video&q=${encodeURIComponent(q)}&maxResults=10&key=${YOUTUBE_API_KEY}`
       );
-      const data = await response.json();
+      const searchData = await searchResponse.json();
       
-      const results = (data.items || []).map(item => ({
-        id: item.id.videoId,
-        title: item.snippet.title,
-        artist: item.snippet.channelTitle,
-        thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
-        duration: 0
-      }));
+      const videoIds = (searchData.items || []).map(item => item.id.videoId).join(',');
+      
+      // Then get video details with duration
+      const detailsResponse = await fetch(
+        `${YOUTUBE_API_BASE}/videos?part=snippet,contentDetails&id=${videoIds}&key=${YOUTUBE_API_KEY}`
+      );
+      const detailsData = await detailsResponse.json();
+      
+      const detailsMap = {};
+      (detailsData.items || []).forEach(item => {
+        detailsMap[item.id] = item;
+      });
+      
+      const results = (searchData.items || []).map(item => {
+        const details = detailsMap[item.id.videoId];
+        return {
+          id: item.id.videoId,
+          title: item.snippet.title,
+          artist: item.snippet.channelTitle,
+          thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
+          duration: details ? parseDuration(details.contentDetails?.duration) : 0
+        };
+      });
       
       res.status(200).json({ results });
     } catch (error) {
@@ -39,11 +66,11 @@ export default async function handler(req, res) {
     return;
   }
   
-  // Trending - using mostPopular
+  // Trending with duration
   if (url.includes('/api/trending')) {
     try {
       const response = await fetch(
-        `${YOUTUBE_API_BASE}/videos?part=snippet,contentDetails&chart=mostPopular&regionCode=US&maxResults=20&key=${YOUTUBE_API_KEY}`
+        `${YOUTUBE_API_BASE}/videos?part=snippet,contentDetails&chart=mostPopular&regionCode=US&maxResults=10&key=${YOUTUBE_API_KEY}`
       );
       const data = await response.json();
       
@@ -52,7 +79,7 @@ export default async function handler(req, res) {
         title: item.snippet.title,
         artist: item.snippet.channelTitle,
         thumbnail: item.snippet.thumbnails?.medium?.url || '',
-        duration: 0
+        duration: parseDuration(item.contentDetails?.duration)
       }));
       
       res.status(200).json({ results });
@@ -63,7 +90,7 @@ export default async function handler(req, res) {
     return;
   }
   
-  // Stream - get video details for duration
+  // Stream with duration
   if (url.includes('/api/stream/')) {
     const videoId = url.split('/api/stream/')[1]?.split('?')[0];
     
@@ -79,21 +106,14 @@ export default async function handler(req, res) {
         return;
       }
       
-      // Parse ISO 8601 duration
-      const durationStr = item.contentDetails?.duration || 'PT0M0S';
-      const match = durationStr.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-      const hours = parseInt(match?.[1] || '0') || 0;
-      const minutes = parseInt(match?.[2] || '0') || 0;
-      const seconds = parseInt(match?.[3] || '0') || 0;
-      const duration = hours * 3600 + minutes * 60 + seconds;
+      const duration = parseDuration(item.contentDetails?.duration);
       
       res.status(200).json({
         video_id: videoId,
-        audio_url: null,
         title: item.snippet.title,
         thumbnail: item.snippet.thumbnails?.medium?.url || '',
         duration: duration,
-        note: 'Use frontend player with YouTube embeds'
+        note: 'Use YouTube player'
       });
     } catch (error) {
       console.error('Stream error:', error);
@@ -102,17 +122,16 @@ export default async function handler(req, res) {
     return;
   }
   
-  // Playlists
+  // Other endpoints
   if (url.includes('/api/playlists') || url.includes('/api/recently-played') || url.includes('/api/likes')) {
     res.status(200).json([]);
     return;
   }
   
-  // Auth status
   if (url.includes('/api/auth/status')) {
     res.status(200).json({ authenticated: false });
     return;
   }
   
-  res.status(200).json({ status: 'ok', version: '3.0.0', source: 'youtube-data-api' });
+  res.status(200).json({ status: 'ok', version: '3.1.0' });
 }

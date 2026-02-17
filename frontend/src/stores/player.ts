@@ -48,6 +48,20 @@ export const usePlayerStore = defineStore('player', () => {
       currentIndex.value = newQueue.findIndex(t => t.id === track.id)
     }
 
+    // Fetch video details to get duration
+    try {
+      const response = await fetch(`/api/stream/${track.id}`)
+      const data = await response.json()
+      if (data.duration) {
+        track.duration = data.duration
+      }
+      if (data.thumbnail && !track.thumbnail) {
+        track.thumbnail = data.thumbnail
+      }
+    } catch (e) {
+      console.log('Could not fetch video details')
+    }
+
     currentTrack.value = track
 
     // Play the track using audio player service
