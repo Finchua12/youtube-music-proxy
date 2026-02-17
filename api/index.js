@@ -32,6 +32,18 @@ export default async function handler(req, res) {
     return;
   }
   
+  // Recently Played
+  if (url.includes('/api/recently-played')) {
+    res.status(200).json([]);
+    return;
+  }
+  
+  // Likes
+  if (url.includes('/api/likes')) {
+    res.status(200).json([]);
+    return;
+  }
+  
   // Auth
   if (url.includes('/api/auth/url')) {
     res.status(200).json({ auth_url: 'https://accounts.google.com/o/oauth2/auth' });

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div class="titlebar" data-tauri-drag-region>
+    <div class="titlebar" data-tauri-drag-region v-if="isTauri">
       <div class="titlebar-title">YouTube Music Proxy</div>
       <div class="titlebar-controls">
         <button class="titlebar-button" @click="minimizeWindow">
@@ -23,32 +23,59 @@
     </div>
 
     <div class="main-layout">
-      <Sidebar />
-      <main class="content">
-        <PlayerBar />
-        <router-view />
-      </main>
+      <div v-if="isLoading" class="loading-screen">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
+      <div v-else-if="loadError" class="error-screen">
+        <p>{{ loadError }}</p>
+        <button @click="retryLoad">Retry</button>
+      </div>
+      <template v-else>
+        <Sidebar />
+        <main class="content">
+          <PlayerBar />
+          <router-view />
+        </main>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import Sidebar from './components/Sidebar.vue'
 import PlayerBar from './components/PlayerBar.vue'
 
 const playerStore = usePlayerStore()
+const isLoading = ref(true)
+const loadError = ref<string | null>(null)
 
-// Check if running in Tauri
-const isTauri = typeof window !== 'undefined' && window.__TAURI__
-
-// Load initial data
 onMounted(async () => {
-  await playerStore.loadRecentlyPlayed()
-  await playerStore.loadPlaylists()
-  await playerStore.loadLikedTracks()
+  await loadData()
 })
+
+const loadData = async () => {
+  isLoading.value = true
+  loadError.value = null
+  try {
+    await playerStore.loadRecentlyPlayed()
+    await playerStore.loadPlaylists()
+    await playerStore.loadLikedTracks()
+  } catch (error) {
+    console.error('Failed to load initial data:', error)
+    loadError.value = 'Failed to load data'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const retryLoad = () => {
+  loadData()
+}
+
+const isTauri = typeof window !== 'undefined' && window.__TAURI__
 
 const minimizeWindow = () => {
   if (isTauri) {
@@ -146,5 +173,37 @@ const closeWindow = () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.loading-screen,
+.error-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--bg-tertiary);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-screen button {
+  padding: 8px 16px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>
