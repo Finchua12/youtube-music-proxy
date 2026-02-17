@@ -141,16 +141,14 @@ export const usePlayerStore = defineStore('player', () => {
     isShuffled.value = !isShuffled.value
   }
 
-  const toggleLike = async (trackId: string) => {
+  const toggleLike = (trackId: string) => {
     if (likedTracks.value.has(trackId)) {
-      await likesApi.remove(trackId)
       likedTracks.value.delete(trackId)
     } else {
-      if (currentTrack.value && currentTrack.value.id === trackId) {
-        await likesApi.add(trackId, currentTrack.value.title)
-      }
       likedTracks.value.add(trackId)
     }
+    // Save to localStorage
+    localStorage.setItem('likedTracks', JSON.stringify([...likedTracks.value]))
   }
 
   const search = async (query: string, maxResults: number = 10) => {
@@ -183,10 +181,12 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const loadLikedTracks = async () => {
+  const loadLikedTracks = () => {
     try {
-      const response = await likesApi.getAll()
-      likedTracks.value = new Set(response.map((track: any) => track.video_id))
+      const saved = localStorage.getItem('likedTracks')
+      if (saved) {
+        likedTracks.value = new Set(JSON.parse(saved))
+      }
     } catch (error) {
       console.error('Failed to load liked tracks:', error)
     }

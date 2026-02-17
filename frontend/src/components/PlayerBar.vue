@@ -4,8 +4,8 @@
     <div class="track-info">
       <div class="album-art">
         <img
-          v-if="currentTrack?.albumArt"
-          :src="currentTrack.albumArt"
+          v-if="currentTrack?.thumbnail"
+          :src="currentTrack.thumbnail"
           :alt="currentTrack.title"
         >
         <div v-else class="placeholder-art">

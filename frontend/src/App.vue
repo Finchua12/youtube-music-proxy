@@ -2,7 +2,7 @@
   <div id="app">
     <div class="main-layout">
       <div v-if="isLoading" class="loading-screen">
-        <div class="loader"></div>
+        <div class="spinner"></div>
         <p>Завантаження...</p>
       </div>
       <div v-else-if="loadError" class="error-screen">
@@ -44,8 +44,8 @@ const loadData = async () => {
       playerStore.loadLikedTracks()
     ])
   } catch (error) {
-    console.error('Failed to load initial data:', error)
-    loadError.value = 'Не вдалося завантажити дані'
+    console.error('Failed to load:', error)
+    loadError.value = 'Помилка завантаження'
   } finally {
     isLoading.value = false
   }
@@ -59,11 +59,29 @@ const retryLoad = () => {
 <style>
 @import './styles/main.css';
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
 #app {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+  background: var(--bg-primary);
 }
 
 .main-layout {
@@ -77,7 +95,6 @@ const retryLoad = () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, #0f0f18 100%);
 }
 
 .loading-screen,
@@ -87,12 +104,13 @@ const retryLoad = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 16px;
+  color: var(--text-secondary);
 }
 
-.loader {
-  width: 48px;
-  height: 48px;
+.spinner {
+  width: 40px;
+  height: 40px;
   border: 3px solid var(--bg-tertiary);
   border-top-color: var(--accent);
   border-radius: 50%;
@@ -104,18 +122,16 @@ const retryLoad = () => {
 }
 
 .error-screen button {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  padding: 10px 24px;
+  background: var(--accent);
   color: white;
   border: none;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-pill);
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.3s ease;
 }
 
 .error-screen button:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
+  background: var(--accent-hover);
 }
 </style>

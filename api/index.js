@@ -23,20 +23,18 @@ export default async function handler(req, res) {
   
   const url = req.url || '';
   
-  // Search with duration
+  // Search - only videos with duration
   if (url.includes('/api/search')) {
     const q = new URL(url, 'https://example.com').searchParams.get('q') || '';
     
     try {
-      // First get search results
       const searchResponse = await fetch(
-        `${YOUTUBE_API_BASE}/search?part=snippet&type=video&q=${encodeURIComponent(q)}&maxResults=10&key=${YOUTUBE_API_KEY}`
+        `${YOUTUBE_API_BASE}/search?part=snippet&type=video&q=${encodeURIComponent(q)}&maxResults=15&key=${YOUTUBE_API_KEY}`
       );
       const searchData = await searchResponse.json();
       
       const videoIds = (searchData.items || []).map(item => item.id.videoId).join(',');
       
-      // Then get video details with duration
       const detailsResponse = await fetch(
         `${YOUTUBE_API_BASE}/videos?part=snippet,contentDetails&id=${videoIds}&key=${YOUTUBE_API_KEY}`
       );
@@ -47,16 +45,23 @@ export default async function handler(req, res) {
         detailsMap[item.id] = item;
       });
       
-      const results = (searchData.items || []).map(item => {
-        const details = detailsMap[item.id.videoId];
-        return {
-          id: item.id.videoId,
-          title: item.snippet.title,
-          artist: item.snippet.channelTitle,
-          thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
-          duration: details ? parseDuration(details.contentDetails?.duration) : 0
-        };
-      });
+      // Filter: only videos with duration (no live streams)
+      const results = (searchData.items || [])
+        .filter(item => {
+          const details = detailsMap[item.id.videoId];
+          const duration = details ? parseDuration(details.contentDetails?.duration) : 0;
+          return duration > 0; // Only videos with known duration
+        })
+        .map(item => {
+          const details = detailsMap[item.id.videoId];
+          return {
+            id: item.id.videoId,
+            title: item.snippet.title,
+            artist: item.snippet.channelTitle,
+            thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
+            duration: details ? parseDuration(details.contentDetails?.duration) : 0
+          };
+        });
       
       res.status(200).json({ results });
     } catch (error) {
@@ -66,21 +71,28 @@ export default async function handler(req, res) {
     return;
   }
   
-  // Trending with duration
+  // Trending - only music videos
   if (url.includes('/api/trending')) {
     try {
+      // Use music category (10)
       const response = await fetch(
-        `${YOUTUBE_API_BASE}/videos?part=snippet,contentDetails&chart=mostPopular&regionCode=US&maxResults=10&key=${YOUTUBE_API_KEY}`
+        `${YOUTUBE_API_BASE}/videos?part=snippet,contentDetails&chart=mostPopular&regionCode=US&videoCategoryId=10&maxResults=20&key=${YOUTUBE_API_KEY}`
       );
       const data = await response.json();
       
-      const results = (data.items || []).map(item => ({
-        id: item.id,
-        title: item.snippet.title,
-        artist: item.snippet.channelTitle,
-        thumbnail: item.snippet.thumbnails?.medium?.url || '',
-        duration: parseDuration(item.contentDetails?.duration)
-      }));
+      // Filter: only videos with duration
+      const results = (data.items || [])
+        .filter(item => {
+          const duration = parseDuration(item.contentDetails?.duration);
+          return duration > 0;
+        })
+        .map(item => ({
+          id: item.id,
+          title: item.snippet.title,
+          artist: item.snippet.channelTitle,
+          thumbnail: item.snippet.thumbnails?.medium?.url || '',
+          duration: parseDuration(item.contentDetails?.duration)
+        }));
       
       res.status(200).json({ results });
     } catch (error) {
@@ -112,8 +124,7 @@ export default async function handler(req, res) {
         video_id: videoId,
         title: item.snippet.title,
         thumbnail: item.snippet.thumbnails?.medium?.url || '',
-        duration: duration,
-        note: 'Use YouTube player'
+        duration: duration
       });
     } catch (error) {
       console.error('Stream error:', error);
@@ -133,5 +144,5 @@ export default async function handler(req, res) {
     return;
   }
   
-  res.status(200).json({ status: 'ok', version: '3.1.0' });
+  res.status(200).json({ status: 'ok', version: '3.2.0' });
 }
