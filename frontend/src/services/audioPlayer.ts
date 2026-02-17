@@ -4,7 +4,14 @@ import { downloadService } from '@/services/downloadService'
 
 class AudioPlayerService {
   private sound: Howl | null = null
-  private playerStore = usePlayerStore()
+  private _playerStore: ReturnType<typeof usePlayerStore> | null = null
+
+  private get playerStore() {
+    if (!this._playerStore) {
+      this._playerStore = usePlayerStore()
+    }
+    return this._playerStore
+  }
 
   // Initialize audio player
   initialize() {

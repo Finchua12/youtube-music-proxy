@@ -13257,7 +13257,13 @@ const downloadService = new DownloadService();
 class AudioPlayerService {
   constructor() {
     this.sound = null;
-    this.playerStore = usePlayerStore();
+    this._playerStore = null;
+  }
+  get playerStore() {
+    if (!this._playerStore) {
+      this._playerStore = usePlayerStore();
+    }
+    return this._playerStore;
   }
   // Initialize audio player
   initialize() {
@@ -15418,4 +15424,4 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(router);
 app.mount("#app");
-//# sourceMappingURL=index-B7se4nIw.js.map
+//# sourceMappingURL=index-WMyaQ_3l.js.map
