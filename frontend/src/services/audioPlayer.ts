@@ -1,16 +1,22 @@
-import { usePlayerStore } from '@/stores/player'
+let playerStoreGetter: (() => any) | null = null
+let onPlayerReadyCallback: (() => void) | null = null
+
+export function setPlayerStoreGetter(getter: () => any) {
+  playerStoreGetter = getter
+}
+
+export function onPlayerReady(callback: () => void) {
+  onPlayerReadyCallback = callback
+}
 
 class AudioPlayerService {
   private player: YT.Player | null = null
   private playerContainer: HTMLDivElement | null = null
-  private _playerStore: ReturnType<typeof usePlayerStore> | null = null
   private isReady = false
+  private isPlaying = false
 
   private get playerStore() {
-    if (!this._playerStore) {
-      this._playerStore = usePlayerStore()
-    }
-    return this._playerStore
+    return playerStoreGetter?.()
   }
 
   initialize() {
@@ -63,20 +69,43 @@ class AudioPlayerService {
         onReady: () => {
           this.isReady = true
           console.log('YouTube player ready')
+          onPlayerReadyCallback?.()
         },
         onStateChange: (event: any) => {
-          if (event.data === (window as any).YT.PlayerState.ENDED) {
-            this.handleTrackEnd()
+          const YT = (window as any).YT
+          if (event.data === YT.PlayerState.PLAYING) {
+            this.isPlaying = true
+          } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+            this.isPlaying = false
+            if (event.data === YT.PlayerState.ENDED) {
+              this.handleTrackEnd()
+            }
           }
         }
       }
     })
   }
 
+  async waitForReady(): Promise<void> {
+    if (this.isReady) return
+    return new Promise((resolve) => {
+      const check = () => {
+        if (this.isReady) {
+          resolve()
+        } else {
+          setTimeout(check, 100)
+        }
+      }
+      check()
+    })
+  }
+
   async playTrack(track: any) {
-    if (!this.isReady || !this.player) {
-      console.error('Player not ready')
-      throw new Error('Player not ready')
+    await this.waitForReady()
+    
+    if (!this.player) {
+      console.error('Player not initialized')
+      throw new Error('Player not initialized')
     }
 
     try {
@@ -84,6 +113,7 @@ class AudioPlayerService {
         videoId: track.id,
         startSeconds: 0
       })
+      this.isPlaying = true
       console.log('Playing:', track.title)
     } catch (error) {
       console.error('Failed to play track:', error)
@@ -93,14 +123,17 @@ class AudioPlayerService {
 
   pause() {
     this.player?.pauseVideo()
+    this.isPlaying = false
   }
 
   resume() {
     this.player?.playVideo()
+    this.isPlaying = true
   }
 
   stop() {
     this.player?.stopVideo()
+    this.isPlaying = false
   }
 
   seek(position: number) {
@@ -128,11 +161,11 @@ class AudioPlayerService {
   }
 
   isPlaying(): boolean {
-    return this.player?.getPlayerState() === 1
+    return this.isPlaying
   }
 
   private handleTrackEnd() {
-    this.playerStore.nextTrack()
+    this.playerStore?.nextTrack()
   }
 
   destroy() {

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { searchApi, playlistApi, recentlyPlayedApi, likesApi, downloadApi } from '@/services/api'
-import { audioPlayer } from '@/services/audioPlayer'
+import { audioPlayer, setPlayerStoreGetter, onPlayerReady } from '@/services/audioPlayer'
 
 export const usePlayerStore = defineStore('player', () => {
   // State
@@ -17,6 +17,19 @@ export const usePlayerStore = defineStore('player', () => {
   const playlists = ref<any[]>([])
   const recentlyPlayed = ref<any[]>([])
   const likedTracks = ref<Set<string>>(new Set())
+  const playerReady = ref(false)
+
+  // Set getter for audio player
+  setPlayerStoreGetter(() => usePlayerStore())
+  
+  // Listen for player ready
+  onPlayerReady(() => {
+    playerReady.value = true
+    console.log('Player ready in store')
+  })
+
+  // Initialize audio player
+  audioPlayer.initialize()
 
   // Getters
   const currentProgress = ref(0)
@@ -195,6 +208,7 @@ export const usePlayerStore = defineStore('player', () => {
     recentlyPlayed,
     likedTracks,
     currentProgress,
+    playerReady,
 
     // Getters
     duration,
