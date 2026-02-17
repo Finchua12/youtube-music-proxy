@@ -1,0 +1,338 @@
+{
+  "nodes": [
+    {
+      "id": "app",
+      "type": "frame",
+      "props": {
+        "width": 1440,
+        "height": 900,
+        "background": "#030303"
+      }
+    },
+    {
+      "id": "sidebar",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 0,
+        "width": 240,
+        "height": 900,
+        "background": "#030303"
+      }
+    },
+    {
+      "id": "logo-text",
+      "type": "text",
+      "props": {
+        "x": 24,
+        "y": 24,
+        "content": "YouTube Music",
+        "fontSize": 22,
+        "fontWeight": 700,
+        "color": "#fff"
+      }
+    },
+    {
+      "id": "nav-home",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 72,
+        "width": 240,
+        "height": 44,
+        "background": "transparent"
+      }
+    },
+    {
+      "id": "nav-home-icon",
+      "type": "text",
+      "props": {
+        "x": 24,
+        "y": 12,
+        "content": "🏠",
+        "fontSize": 18
+      }
+    },
+    {
+      "id": "nav-home-text",
+      "type": "text",
+      "props": {
+        "x": 56,
+        "y": 13,
+        "content": "Головна",
+        "fontSize": 14,
+        "fontWeight": 500,
+        "color": "#fff"
+      }
+    },
+    {
+      "id": "nav-search",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 116,
+        "width": 240,
+        "height": 44,
+        "background": "transparent"
+      }
+    },
+    {
+      "id": "nav-search-text",
+      "type": "text",
+      "props": {
+        "x": 56,
+        "y": 13,
+        "content": "Пошук",
+        "fontSize": 14,
+        "fontWeight": 500,
+        "color": "#aaa"
+      }
+    },
+    {
+      "id": "nav-library",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 160,
+        "width": 240,
+        "height": 44,
+        "background": "transparent"
+      }
+    },
+    {
+      "id": "nav-library-text",
+      "type": "text",
+      "props": {
+        "x": 56,
+        "y": 13,
+        "content": "Бібліотека",
+        "fontSize": 14,
+        "fontWeight": 500,
+        "color": "#aaa"
+      }
+    },
+    {
+      "id": "main",
+      "type": "frame",
+      "props": {
+        "x": 240,
+        "y": 0,
+        "width": 1200,
+        "height": 780,
+        "background": "#030303"
+      }
+    },
+    {
+      "id": "header-bg",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 0,
+        "width": 1200,
+        "height": 56,
+        "background": "linear-gradient(90deg, #4400cc 0%, #8800cc 100%)"
+      }
+    },
+    {
+      "id": "header-text",
+      "type": "text",
+      "props": {
+        "x": 24,
+        "y": 18,
+        "content": "Популярне",
+        "fontSize": 24,
+        "fontWeight": 700,
+        "color": "#fff"
+      }
+    },
+    {
+      "id": "tracks-list",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 80,
+        "width": 1200,
+        "height": 700
+      }
+    },
+    {
+      "id": "track-row-1",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 0,
+        "width": 1152,
+        "height": 64,
+        "background": "transparent"
+      }
+    },
+    {
+      "id": "track-num-1",
+      "type": "text",
+      "props": {
+        "x": 16,
+        "y": 24,
+        "content": "1",
+        "fontSize": 14,
+        "color": "#6a6a6a"
+      }
+    },
+    {
+      "id": "track-img-1",
+      "type": "frame",
+      "props": {
+        "x": 48,
+        "y": 8,
+        "width": 48,
+        "height": 48,
+        "background": "#282828",
+        "borderRadius": 4
+      }
+    },
+    {
+      "id": "track-title-1",
+      "type": "text",
+      "props": {
+        "x": 112,
+        "y": 16,
+        "content": "Song Title Here",
+        "fontSize": 14,
+        "fontWeight": 500,
+        "color": "#fff"
+      }
+    },
+    {
+      "id": "track-artist-1",
+      "type": "text",
+      "props": {
+        "x": 112,
+        "y": 36,
+        "content": "Artist Name",
+        "fontSize": 12,
+        "color": "#aaa"
+      }
+    },
+    {
+      "id": "track-album-1",
+      "type": "text",
+      "props": {
+        "x": 700,
+        "y": 24,
+        "content": "Album Name",
+        "fontSize": 14,
+        "color": "#aaa"
+      }
+    },
+    {
+      "id": "track-duration-1",
+      "type": "text",
+      "props": {
+        "x": 1080,
+        "y": 24,
+        "content": "3:45",
+        "fontSize": 14,
+        "color": "#aaa"
+      }
+    },
+    {
+      "id": "player-bar",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 780,
+        "width": 1440,
+        "height": 90,
+        "background": "#181818"
+      }
+    },
+    {
+      "id": "player-track-info",
+      "type": "frame",
+      "props": {
+        "x": 16,
+        "y": 16,
+        "width": 300,
+        "height": 58
+      }
+    },
+    {
+      "id": "player-img",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 0,
+        "width": 56,
+        "height": 56,
+        "background": "#282828",
+        "borderRadius": 4
+      }
+    },
+    {
+      "id": "player-title",
+      "type": "text",
+      "props": {
+        "x": 72,
+        "y": 12,
+        "content": "Track Title",
+        "fontSize": 14,
+        "fontWeight": 500,
+        "color": "#fff"
+      }
+    },
+    {
+      "id": "player-artist",
+      "type": "text",
+      "props": {
+        "x": 72,
+        "y": 34,
+        "content": "Artist",
+        "fontSize": 12,
+        "color": "#aaa"
+      }
+    },
+    {
+      "id": "player-controls",
+      "type": "frame",
+      "props": {
+        "x": 540,
+        "y": 8,
+        "width": 360,
+        "height": 48
+      }
+    },
+    {
+      "id": "player-progress-bar",
+      "type": "frame",
+      "props": {
+        "x": 540,
+        "y": 64,
+        "width": 360,
+        "height": 4,
+        "background": "#404040",
+        "borderRadius": 2
+      }
+    },
+    {
+      "id": "player-progress-fill",
+      "type": "frame",
+      "props": {
+        "x": 540,
+        "y": 64,
+        "width": 120,
+        "height": 4,
+        "background": "#fff",
+        "borderRadius": 2
+      }
+    },
+    {
+      "id": "player-volume",
+      "type": "frame",
+      "props": {
+        "x": 1200,
+        "y": 40,
+        "width": 120,
+        "height": 24
+      }
+    }
+  ]
+}

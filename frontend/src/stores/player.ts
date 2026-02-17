@@ -69,8 +69,8 @@ export const usePlayerStore = defineStore('player', () => {
       await audioPlayer.playTrack(track)
       isPlaying.value = true
 
-      // Add to recently played
-      await recentlyPlayedApi.add(track.id, track.title)
+      // Add to recently played (localStorage)
+      addToRecentlyPlayed(track)
 
       // Update recently played list
       await loadRecentlyPlayed()
@@ -163,22 +163,32 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const loadPlaylists = async () => {
+  const loadPlaylists = () => {
     try {
-      const response = await playlistApi.getAll()
-      playlists.value = response
+      const saved = localStorage.getItem('playlists')
+      if (saved) {
+        playlists.value = JSON.parse(saved)
+      }
     } catch (error) {
       console.error('Failed to load playlists:', error)
     }
   }
 
-  const loadRecentlyPlayed = async () => {
+  const loadRecentlyPlayed = () => {
     try {
-      const response = await recentlyPlayedApi.getAll()
-      recentlyPlayed.value = response
+      const saved = localStorage.getItem('recentlyPlayed')
+      if (saved) {
+        recentlyPlayed.value = JSON.parse(saved)
+      }
     } catch (error) {
       console.error('Failed to load recently played:', error)
     }
+  }
+
+  const addToRecentlyPlayed = (track: any) => {
+    const filtered = recentlyPlayed.value.filter(t => t.id !== track.id)
+    recentlyPlayed.value = [track, ...filtered].slice(0, 50)
+    localStorage.setItem('recentlyPlayed', JSON.stringify(recentlyPlayed.value))
   }
 
   const loadLikedTracks = () => {
