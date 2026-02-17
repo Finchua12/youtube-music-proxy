@@ -12,8 +12,9 @@
             v-model="searchQuery"
             type="text"
             class="search-input"
-            placeholder="Введіть назву пісні, виконавця або альбом..."
+            placeholder="Введіть назву пісні, виконавця..."
             @input="handleSearch"
+            @keyup.enter="submitSearch"
           >
           <button v-if="searchQuery" class="clear-btn" @click="clearSearch">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -241,8 +242,6 @@ const handleSearch = async () => {
       searchResults.tracks = results.slice(0, 10)
       searchResults.artists = []
       searchResults.playlists = []
-      // Save to search history
-      saveRecentSearch(searchQuery.value)
     } catch (error) {
       console.error('Search failed:', error)
     } finally {
@@ -252,6 +251,12 @@ const handleSearch = async () => {
     searchResults.tracks = []
     searchResults.artists = []
     searchResults.playlists = []
+  }
+}
+
+const submitSearch = () => {
+  if (searchQuery.value.length > 2) {
+    saveRecentSearch(searchQuery.value)
   }
 }
 
