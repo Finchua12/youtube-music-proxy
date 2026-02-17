@@ -1,3 +1,5 @@
+const PIPED_API = 'https://pipedapi.kavin.rocks';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -9,24 +11,77 @@ export default async function handler(req, res) {
   }
   
   const url = req.url || '';
+  const searchParams = new URL(url, 'https://example.com').searchParams;
   
-  // Search endpoint
+  // Search endpoint - use Piped API
   if (url.includes('/api/search')) {
-    const urlObj = new URL(url, 'https://example.com');
-    const q = urlObj.searchParams.get('q') || '';
-    
-    // Use mock data for now
-    const mockResults = [
-      { id: 'dQw4w9WgXcQ', title: `${q} - Song 1`, artist: 'Artist 1', thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg', duration: 180 },
-      { id: 'test2', title: `${q} - Song 2`, artist: 'Artist 2', thumbnail: '', duration: 240 },
-      { id: 'test3', title: `${q} - Song 3`, artist: 'Artist 3', thumbnail: '', duration: 200 }
-    ];
-    
-    res.status(200).json({ results: mockResults });
+    const q = searchParams.get('q') || '';
+    try {
+      const response = await fetch(`${PIPED_API}/search?q=${encodeURIComponent(q)}&filter=videos`);
+      const data = await response.json();
+      
+      const results = (data.items || []).map(item => ({
+        id: item.url.split('=')[1] || item.url.split('/').pop(),
+        title: item.title,
+        artist: item.uploaderName || item.author || 'Unknown',
+        thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${item.url.split('=')[1] || item.url.split('/').pop()}/mqdefault.jpg`,
+        duration: item.duration || 0
+      }));
+      
+      res.status(200).json({ results });
+    } catch (error) {
+      console.error('Search error:', error);
+      res.status(500).json({ error: 'Search failed', results: [] });
+    }
     return;
   }
   
-  // Playlists
+  // Stream endpoint - get audio URL from Piped
+  if (url.includes('/api/stream/')) {
+    const videoId = url.split('/api/stream/')[1]?.split('?')[0];
+    try {
+      const response = await fetch(`${PIPED_API}/streams/${videoId}`);
+      const data = await response.json();
+      
+      // Find best audio stream
+      const audioStreams = data.audioStreams || [];
+      const bestAudio = audioStreams.find(s => s.quality === '128kbps') || audioStreams[0];
+      
+      res.status(200).json({
+        video_id: videoId,
+        audio_url: bestAudio?.url || null,
+        title: data.title,
+        thumbnail: data.thumbnailUrl
+      });
+    } catch (error) {
+      console.error('Stream error:', error);
+      res.status(500).json({ error: 'Failed to get stream' });
+    }
+    return;
+  }
+  
+  // Trending / Home
+  if (url.includes('/api/trending')) {
+    try {
+      const response = await fetch(`${PIPED_API}/trending`);
+      const data = await response.json();
+      
+      const results = (data || []).slice(0, 20).map(item => ({
+        id: item.url.split('=')[1] || item.url.split('/').pop(),
+        title: item.title,
+        artist: item.uploaderName || 'Unknown',
+        thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${item.url.split('=')[1] || item.url.split('/').pop()}/mqdefault.jpg`,
+        duration: item.duration || 0
+      }));
+      
+      res.status(200).json({ results });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get trending', results: [] });
+    }
+    return;
+  }
+  
+  // Playlists - store in memory for now
   if (url.includes('/api/playlists')) {
     res.status(200).json([]);
     return;
@@ -55,20 +110,11 @@ export default async function handler(req, res) {
     return;
   }
   
-  // Stream
-  if (url.includes('/api/stream/')) {
-    const videoId = url.split('/api/stream/')[1]?.split('?')[0];
-    res.status(200).json({
-      video_id: videoId,
-      audio_url: `https://rr1---sn-4g5e6nsd.googlevideo.com/...`
-    });
-    return;
-  }
-  
   // Root
   res.status(200).json({ 
     status: 'ok', 
     message: 'YouTube Music Proxy API',
-    version: '1.0.0'
+    version: '2.0.0',
+    backend: 'piped'
   });
 }

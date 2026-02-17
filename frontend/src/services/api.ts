@@ -42,6 +42,11 @@ export const searchApi = {
     apiClient.get(`/search?q=${encodeURIComponent(query)}&max_results=${maxResults}`)
 }
 
+// Trending API
+export const trendingApi = {
+  getTrending: () => apiClient.get('/trending')
+}
+
 // Playlist API
 export const playlistApi = {
   getAll: () => apiClient.get('/playlists'),
