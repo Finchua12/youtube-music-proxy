@@ -18,6 +18,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    minify: 'esbuild',
     rollupOptions: {
       external: ['@tauri-apps/api']
     }
