@@ -13,7 +13,8 @@ class AudioPlayerService {
   private player: YT.Player | null = null
   private playerContainer: HTMLDivElement | null = null
   private isReady = false
-  private isPlaying = false
+  private isPlayingState = false
+  private progressInterval: number | null = null
 
   private get playerStore() {
     return playerStoreGetter?.()
@@ -29,7 +30,7 @@ class AudioPlayerService {
     
     this.playerContainer = document.createElement('div')
     this.playerContainer.id = 'youtube-player-container'
-    this.playerContainer.style.display = 'none'
+    this.playerContainer.style.cssText = 'position: fixed; visibility: hidden; pointer-events: none;'
     document.body.appendChild(this.playerContainer)
   }
 
@@ -52,9 +53,11 @@ class AudioPlayerService {
   private initPlayer() {
     if (!this.playerContainer) return
     
+    const origin = window.location.origin
+    
     this.player = new (window as any).YT.Player(this.playerContainer, {
-      height: '0',
-      width: '0',
+      height: '1',
+      width: '1',
       playerVars: {
         autoplay: 1,
         controls: 0,
@@ -63,7 +66,9 @@ class AudioPlayerService {
         modestbranding: 1,
         rel: 0,
         showinfo: 0,
-        iv_load_policy: 3
+        iv_load_policy: 3,
+        playsinline: 1,
+        widget_referrer: origin
       },
       events: {
         onReady: () => {
@@ -74,16 +79,50 @@ class AudioPlayerService {
         onStateChange: (event: any) => {
           const YT = (window as any).YT
           if (event.data === YT.PlayerState.PLAYING) {
-            this.isPlaying = true
-          } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-            this.isPlaying = false
-            if (event.data === YT.PlayerState.ENDED) {
-              this.handleTrackEnd()
-            }
+            this.isPlayingState = true
+            this.startProgressTracking()
+            this.updatePlayerStore()
+          } else if (event.data === YT.PlayerState.PAUSED) {
+            this.isPlayingState = false
+            this.stopProgressTracking()
+            this.updatePlayerStore()
+          } else if (event.data === YT.PlayerState.ENDED) {
+            this.isPlayingState = false
+            this.stopProgressTracking()
+            this.handleTrackEnd()
           }
         }
       }
     })
+  }
+
+  private startProgressTracking() {
+    if (this.progressInterval) return
+    this.progressInterval = window.setInterval(() => {
+      this.updatePlayerStore()
+    }, 1000)
+  }
+
+  private stopProgressTracking() {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval)
+      this.progressInterval = null
+    }
+  }
+
+  private updatePlayerStore() {
+    const store = this.playerStore
+    if (!store) return
+    
+    const position = this.getPosition()
+    const duration = this.getDuration()
+    
+    if (store.currentProgress !== undefined) {
+      store.currentProgress = position
+    }
+    if (store.isPlaying !== undefined) {
+      store.isPlaying = this.isPlayingState
+    }
   }
 
   async waitForReady(): Promise<void> {
@@ -113,7 +152,8 @@ class AudioPlayerService {
         videoId: track.id,
         startSeconds: 0
       })
-      this.isPlaying = true
+      this.isPlayingState = true
+      this.startProgressTracking()
       console.log('Playing:', track.title)
     } catch (error) {
       console.error('Failed to play track:', error)
@@ -123,17 +163,20 @@ class AudioPlayerService {
 
   pause() {
     this.player?.pauseVideo()
-    this.isPlaying = false
+    this.isPlayingState = false
+    this.stopProgressTracking()
   }
 
   resume() {
     this.player?.playVideo()
-    this.isPlaying = true
+    this.isPlayingState = true
+    this.startProgressTracking()
   }
 
   stop() {
     this.player?.stopVideo()
-    this.isPlaying = false
+    this.isPlayingState = false
+    this.stopProgressTracking()
   }
 
   seek(position: number) {
@@ -141,34 +184,48 @@ class AudioPlayerService {
   }
 
   getPosition(): number {
-    return this.player?.getCurrentTime() || 0
-  }
-
-  getDuration(): number {
-    return this.player?.getDuration() || 0
-  }
-
-  setVolume(volume: number) {
-    this.player?.setVolume(volume * 100)
-  }
-
-  setMute(muted: boolean) {
-    if (muted) {
-      this.player?.mute()
-    } else {
-      this.player?.unmute()
+    try {
+      return this.player?.getCurrentTime() || 0
+    } catch {
+      return 0
     }
   }
 
+  getDuration(): number {
+    try {
+      return this.player?.getDuration() || 0
+    } catch {
+      return 0
+    }
+  }
+
+  setVolume(volume: number) {
+    try {
+      this.player?.setVolume(volume * 100)
+    } catch {}
+  }
+
+  setMute(muted: boolean) {
+    try {
+      if (muted) {
+        this.player?.mute()
+      } else {
+        this.player?.unmute()
+      }
+    } catch {}
+  }
+
   isPlaying(): boolean {
-    return this.isPlaying
+    return this.isPlayingState
   }
 
   private handleTrackEnd() {
+    this.stopProgressTracking()
     this.playerStore?.nextTrack()
   }
 
   destroy() {
+    this.stopProgressTracking()
     this.player?.destroy()
     this.playerContainer?.remove()
   }

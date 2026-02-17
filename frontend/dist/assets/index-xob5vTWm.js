@@ -11009,7 +11009,8 @@ class AudioPlayerService {
     this.player = null;
     this.playerContainer = null;
     this.isReady = false;
-    this.isPlaying = false;
+    this.isPlayingState = false;
+    this.progressInterval = null;
   }
   get playerStore() {
     return playerStoreGetter == null ? void 0 : playerStoreGetter();
@@ -11022,7 +11023,7 @@ class AudioPlayerService {
     if (document.getElementById("youtube-player-container")) return;
     this.playerContainer = document.createElement("div");
     this.playerContainer.id = "youtube-player-container";
-    this.playerContainer.style.display = "none";
+    this.playerContainer.style.cssText = "position: fixed; visibility: hidden; pointer-events: none;";
     document.body.appendChild(this.playerContainer);
   }
   loadYouTubeAPI() {
@@ -11041,9 +11042,10 @@ class AudioPlayerService {
   }
   initPlayer() {
     if (!this.playerContainer) return;
+    const origin2 = window.location.origin;
     this.player = new window.YT.Player(this.playerContainer, {
-      height: "0",
-      width: "0",
+      height: "1",
+      width: "1",
       playerVars: {
         autoplay: 1,
         controls: 0,
@@ -11052,7 +11054,9 @@ class AudioPlayerService {
         modestbranding: 1,
         rel: 0,
         showinfo: 0,
-        iv_load_policy: 3
+        iv_load_policy: 3,
+        playsinline: 1,
+        widget_referrer: origin2
       },
       events: {
         onReady: () => {
@@ -11063,16 +11067,45 @@ class AudioPlayerService {
         onStateChange: (event) => {
           const YT = window.YT;
           if (event.data === YT.PlayerState.PLAYING) {
-            this.isPlaying = true;
-          } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-            this.isPlaying = false;
-            if (event.data === YT.PlayerState.ENDED) {
-              this.handleTrackEnd();
-            }
+            this.isPlayingState = true;
+            this.startProgressTracking();
+            this.updatePlayerStore();
+          } else if (event.data === YT.PlayerState.PAUSED) {
+            this.isPlayingState = false;
+            this.stopProgressTracking();
+            this.updatePlayerStore();
+          } else if (event.data === YT.PlayerState.ENDED) {
+            this.isPlayingState = false;
+            this.stopProgressTracking();
+            this.handleTrackEnd();
           }
         }
       }
     });
+  }
+  startProgressTracking() {
+    if (this.progressInterval) return;
+    this.progressInterval = window.setInterval(() => {
+      this.updatePlayerStore();
+    }, 1e3);
+  }
+  stopProgressTracking() {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
+    }
+  }
+  updatePlayerStore() {
+    const store = this.playerStore;
+    if (!store) return;
+    const position = this.getPosition();
+    this.getDuration();
+    if (store.currentProgress !== void 0) {
+      store.currentProgress = position;
+    }
+    if (store.isPlaying !== void 0) {
+      store.isPlaying = this.isPlayingState;
+    }
   }
   async waitForReady() {
     if (this.isReady) return;
@@ -11098,7 +11131,8 @@ class AudioPlayerService {
         videoId: track2.id,
         startSeconds: 0
       });
-      this.isPlaying = true;
+      this.isPlayingState = true;
+      this.startProgressTracking();
       console.log("Playing:", track2.title);
     } catch (error) {
       console.error("Failed to play track:", error);
@@ -11108,17 +11142,20 @@ class AudioPlayerService {
   pause() {
     var _a;
     (_a = this.player) == null ? void 0 : _a.pauseVideo();
-    this.isPlaying = false;
+    this.isPlayingState = false;
+    this.stopProgressTracking();
   }
   resume() {
     var _a;
     (_a = this.player) == null ? void 0 : _a.playVideo();
-    this.isPlaying = true;
+    this.isPlayingState = true;
+    this.startProgressTracking();
   }
   stop() {
     var _a;
     (_a = this.player) == null ? void 0 : _a.stopVideo();
-    this.isPlaying = false;
+    this.isPlayingState = false;
+    this.stopProgressTracking();
   }
   seek(position) {
     var _a;
@@ -11126,33 +11163,49 @@ class AudioPlayerService {
   }
   getPosition() {
     var _a;
-    return ((_a = this.player) == null ? void 0 : _a.getCurrentTime()) || 0;
+    try {
+      return ((_a = this.player) == null ? void 0 : _a.getCurrentTime()) || 0;
+    } catch {
+      return 0;
+    }
   }
   getDuration() {
     var _a;
-    return ((_a = this.player) == null ? void 0 : _a.getDuration()) || 0;
+    try {
+      return ((_a = this.player) == null ? void 0 : _a.getDuration()) || 0;
+    } catch {
+      return 0;
+    }
   }
   setVolume(volume) {
     var _a;
-    (_a = this.player) == null ? void 0 : _a.setVolume(volume * 100);
+    try {
+      (_a = this.player) == null ? void 0 : _a.setVolume(volume * 100);
+    } catch {
+    }
   }
   setMute(muted) {
     var _a, _b;
-    if (muted) {
-      (_a = this.player) == null ? void 0 : _a.mute();
-    } else {
-      (_b = this.player) == null ? void 0 : _b.unmute();
+    try {
+      if (muted) {
+        (_a = this.player) == null ? void 0 : _a.mute();
+      } else {
+        (_b = this.player) == null ? void 0 : _b.unmute();
+      }
+    } catch {
     }
   }
   isPlaying() {
-    return this.isPlaying;
+    return this.isPlayingState;
   }
   handleTrackEnd() {
     var _a;
+    this.stopProgressTracking();
     (_a = this.playerStore) == null ? void 0 : _a.nextTrack();
   }
   destroy() {
     var _a, _b;
+    this.stopProgressTracking();
     (_a = this.player) == null ? void 0 : _a.destroy();
     (_b = this.playerContainer) == null ? void 0 : _b.remove();
   }
@@ -11172,13 +11225,13 @@ const usePlayerStore = /* @__PURE__ */ defineStore("player", () => {
   const recentlyPlayed = /* @__PURE__ */ ref([]);
   const likedTracks = /* @__PURE__ */ ref(/* @__PURE__ */ new Set());
   const playerReady = /* @__PURE__ */ ref(false);
+  const currentProgress = /* @__PURE__ */ ref(0);
   setPlayerStoreGetter(() => usePlayerStore());
   onPlayerReady(() => {
     playerReady.value = true;
     console.log("Player ready in store");
   });
   audioPlayer.initialize();
-  const currentProgress = /* @__PURE__ */ ref(0);
   const duration = computed(() => {
     var _a;
     return ((_a = currentTrack.value) == null ? void 0 : _a.duration) || 0;
@@ -13819,4 +13872,4 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(router);
 app.mount("#app");
-//# sourceMappingURL=index-XKc9ZAu-.js.map
+//# sourceMappingURL=index-xob5vTWm.js.map

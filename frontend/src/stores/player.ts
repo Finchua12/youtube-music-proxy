@@ -18,6 +18,7 @@ export const usePlayerStore = defineStore('player', () => {
   const recentlyPlayed = ref<any[]>([])
   const likedTracks = ref<Set<string>>(new Set())
   const playerReady = ref(false)
+  const currentProgress = ref(0)
 
   // Set getter for audio player
   setPlayerStoreGetter(() => usePlayerStore())
@@ -32,7 +33,6 @@ export const usePlayerStore = defineStore('player', () => {
   audioPlayer.initialize()
 
   // Getters
-  const currentProgress = ref(0)
   const duration = computed(() => currentTrack.value?.duration || 0)
   const progressPercent = computed(() => {
     return duration.value > 0 ? (currentProgress.value / duration.value) * 100 : 0
