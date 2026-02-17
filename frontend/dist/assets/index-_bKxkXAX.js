@@ -2620,7 +2620,39 @@ const onRenderTracked = createHook("rtc");
 function onErrorCaptured(hook, target = currentInstance) {
   injectHook("ec", hook, target);
 }
+const COMPONENTS = "components";
+function resolveComponent(name, maybeSelfReference) {
+  return resolveAsset(COMPONENTS, name, true, maybeSelfReference) || name;
+}
 const NULL_DYNAMIC_COMPONENT = /* @__PURE__ */ Symbol.for("v-ndc");
+function resolveAsset(type, name, warnMissing = true, maybeSelfReference = false) {
+  const instance = currentRenderingInstance || currentInstance;
+  if (instance) {
+    const Component = instance.type;
+    {
+      const selfName = getComponentName(
+        Component,
+        false
+      );
+      if (selfName && (selfName === name || selfName === camelize(name) || selfName === capitalize(camelize(name)))) {
+        return Component;
+      }
+    }
+    const res = (
+      // local registration
+      // check instance[type] first which is resolved for options API
+      resolve(instance[type] || Component[type], name) || // global registration
+      resolve(instance.appContext[type], name)
+    );
+    if (!res && maybeSelfReference) {
+      return Component;
+    }
+    return res;
+  }
+}
+function resolve(registry, name) {
+  return registry && (registry[name] || registry[camelize(name)] || registry[capitalize(camelize(name))]);
+}
 function renderList(source, renderItem, cache, index) {
   let ret;
   const cached = cache;
@@ -6817,7 +6849,7 @@ function useCallbacks() {
 }
 function guardToPromiseFn(guard, to, from, record, name, runWithContext = (fn) => fn()) {
   const enterCallbackArray = record && (record.enterCallbacks[name] = record.enterCallbacks[name] || []);
-  return () => new Promise((resolve, reject) => {
+  return () => new Promise((resolve2, reject) => {
     const next = (valid) => {
       if (valid === false) reject(createRouterError(ErrorTypes.NAVIGATION_ABORTED, {
         from,
@@ -6830,7 +6862,7 @@ function guardToPromiseFn(guard, to, from, record, name, runWithContext = (fn) =
       }));
       else {
         if (enterCallbackArray && record.enterCallbacks[name] === enterCallbackArray && typeof valid === "function") enterCallbackArray.push(valid);
-        resolve();
+        resolve2();
       }
     };
     const guardReturn = runWithContext(() => guard.call(record && record.instances[name], to, from, next));
@@ -7394,7 +7426,7 @@ function createRouterMatcher(routes2, globalOptions) {
     matchers.splice(index, 0, matcher);
     if (matcher.record.name && !isAliasRecord(matcher)) matcherMap.set(matcher.record.name, matcher);
   }
-  function resolve(location$1, currentLocation) {
+  function resolve2(location$1, currentLocation) {
     let matcher;
     let params = {};
     let path;
@@ -7443,7 +7475,7 @@ function createRouterMatcher(routes2, globalOptions) {
   }
   return {
     addRoute,
-    resolve,
+    resolve: resolve2,
     removeRoute,
     clearRoutes,
     getRoutes,
@@ -7719,7 +7751,7 @@ function createRouter(options) {
   function hasRoute(name) {
     return !!matcher.getRecordMatcher(name);
   }
-  function resolve(rawLocation, currentLocation) {
+  function resolve2(rawLocation, currentLocation) {
     currentLocation = assign$1({}, currentLocation || currentRoute.value);
     if (typeof rawLocation === "string") {
       const locationNormalized = parseURL(parseQuery$1, rawLocation, currentLocation.path);
@@ -7790,7 +7822,7 @@ function createRouter(options) {
     }
   }
   function pushWithRedirect(to, redirectedFrom) {
-    const targetLocation = pendingLocation = resolve(to);
+    const targetLocation = pendingLocation = resolve2(to);
     const from = currentRoute.value;
     const data = to.state;
     const force = to.force;
@@ -7890,7 +7922,7 @@ function createRouter(options) {
     if (removeHistoryListener) return;
     removeHistoryListener = routerHistory.listen((to, _from, info) => {
       if (!router2.listening) return;
-      const toLocation = resolve(to);
+      const toLocation = resolve2(to);
       const shouldRedirect = handleRedirectRecord(toLocation, router2.currentRoute.value);
       if (shouldRedirect) {
         pushWithRedirect(assign$1(shouldRedirect, {
@@ -7966,7 +7998,7 @@ function createRouter(options) {
     clearRoutes: matcher.clearRoutes,
     hasRoute,
     getRoutes,
-    resolve,
+    resolve: resolve2,
     options,
     push,
     replace,
@@ -8372,19 +8404,6 @@ function defineStore(idOrOptions, setup, setupOptions) {
   useStore.$id = id;
   return useStore;
 }
-const _hoisted_1$6 = { id: "app" };
-const _sfc_main$6 = {
-  __name: "App",
-  setup(__props) {
-    console.log("App component loaded");
-    return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("div", _hoisted_1$6, [..._cache[0] || (_cache[0] = [
-        createBaseVNode("h1", null, "YouTube Music Proxy", -1),
-        createBaseVNode("p", null, "Vue is working!", -1)
-      ])]);
-    };
-  }
-};
 function bind(fn, thisArg) {
   return function wrap() {
     return fn.apply(thisArg, arguments);
@@ -9601,10 +9620,10 @@ let CanceledError$1 = class CanceledError extends AxiosError$1 {
     this.__CANCEL__ = true;
   }
 };
-function settle(resolve, reject, response) {
+function settle(resolve2, reject, response) {
   const validateStatus2 = response.config.validateStatus;
   if (!response.status || !validateStatus2 || validateStatus2(response.status)) {
-    resolve(response);
+    resolve2(response);
   } else {
     reject(new AxiosError$1(
       "Request failed with status code " + response.status,
@@ -9904,7 +9923,7 @@ const resolveConfig = (config) => {
 };
 const isXHRAdapterSupported = typeof XMLHttpRequest !== "undefined";
 const xhrAdapter = isXHRAdapterSupported && function(config) {
-  return new Promise(function dispatchXhrRequest(resolve, reject) {
+  return new Promise(function dispatchXhrRequest(resolve2, reject) {
     const _config = resolveConfig(config);
     let requestData = _config.data;
     const requestHeaders = AxiosHeaders$1.from(_config.headers).normalize();
@@ -9938,7 +9957,7 @@ const xhrAdapter = isXHRAdapterSupported && function(config) {
         request
       };
       settle(function _resolve(value) {
-        resolve(value);
+        resolve2(value);
         done();
       }, function _reject(err) {
         reject(err);
@@ -10302,8 +10321,8 @@ const factory = (env) => {
       responseType = responseType || "text";
       let responseData = await resolvers[utils$1.findKey(resolvers, responseType) || "text"](response, config);
       !isStreamResponse && unsubscribe && unsubscribe();
-      return await new Promise((resolve, reject) => {
-        settle(resolve, reject, {
+      return await new Promise((resolve2, reject) => {
+        settle(resolve2, reject, {
           data: responseData,
           headers: AxiosHeaders$1.from(response.headers),
           status: response.status,
@@ -10696,8 +10715,8 @@ let CancelToken$1 = class CancelToken {
       throw new TypeError("executor must be a function.");
     }
     let resolvePromise;
-    this.promise = new Promise(function promiseExecutor(resolve) {
-      resolvePromise = resolve;
+    this.promise = new Promise(function promiseExecutor(resolve2) {
+      resolvePromise = resolve2;
     });
     const token = this;
     this.promise.then((cancel) => {
@@ -10710,9 +10729,9 @@ let CancelToken$1 = class CancelToken {
     });
     this.promise.then = (onfulfilled) => {
       let _resolve;
-      const promise = new Promise((resolve) => {
-        token.subscribe(resolve);
-        _resolve = resolve;
+      const promise = new Promise((resolve2) => {
+        token.subscribe(resolve2);
+        _resolve = resolve2;
       }).then(onfulfilled);
       promise.cancel = function reject() {
         token.unsubscribe(_resolve);
@@ -13612,6 +13631,847 @@ const usePlayerStore = /* @__PURE__ */ defineStore("player", () => {
     initialize
   };
 });
+const _hoisted_1$8 = { class: "sidebar" };
+const _hoisted_2$8 = { class: "nav-menu" };
+const _hoisted_3$8 = { class: "playlists-section" };
+const _hoisted_4$8 = { class: "user-profile" };
+const _hoisted_5$8 = {
+  key: 0,
+  class: "profile-info"
+};
+const _hoisted_6$5 = { class: "user-details" };
+const _hoisted_7$5 = { class: "username" };
+const _hoisted_8$5 = { class: "status" };
+const _sfc_main$8 = /* @__PURE__ */ defineComponent({
+  __name: "Sidebar",
+  setup(__props) {
+    const router2 = useRouter();
+    const isAuthenticated = /* @__PURE__ */ ref(false);
+    const isGuest = /* @__PURE__ */ ref(false);
+    onMounted(() => {
+      checkAuthStatus();
+    });
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem("access_token");
+      const authMode = localStorage.getItem("auth_mode");
+      isAuthenticated.value = !!token;
+      isGuest.value = authMode === "guest";
+    };
+    const login = () => {
+      router2.push("/login");
+    };
+    const logout = () => {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("expires_at");
+      localStorage.removeItem("auth_mode");
+      isAuthenticated.value = false;
+      isGuest.value = false;
+      window.location.reload();
+    };
+    return (_ctx, _cache) => {
+      const _component_router_link = resolveComponent("router-link");
+      return openBlock(), createElementBlock("aside", _hoisted_1$8, [
+        _cache[11] || (_cache[11] = createStaticVNode('<div class="logo-container" data-v-a6d0654b><div class="logo" data-v-a6d0654b><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" data-v-a6d0654b><path d="M20.5 15.5L14.5 12V20L20.5 16.5V24C20.5 24.5523 20.0523 25 19.5 25H5.5C4.94772 25 4.5 24.5523 4.5 24V8C4.5 7.44772 4.94772 7 5.5 7H19.5C20.0523 7 20.5 7.44772 20.5 8V15.5Z" fill="#FF0000" data-v-a6d0654b></path><path d="M23.5 11C24.8807 11 26 9.88071 26 8.5C26 7.11929 24.8807 6 23.5 6C22.1193 6 21 7.11929 21 8.5C21 9.88071 22.1193 11 23.5 11Z" fill="#FF0000" data-v-a6d0654b></path><path d="M23.5 26C24.8807 26 26 24.8807 26 23.5C26 22.1193 24.8807 21 23.5 21C22.1193 21 21 22.1193 21 23.5C21 24.8807 22.1193 26 23.5 26Z" fill="#FF0000" data-v-a6d0654b></path></svg><span class="logo-text" data-v-a6d0654b>MusicProxy</span></div></div>', 1)),
+        createBaseVNode("nav", _hoisted_2$8, [
+          createVNode(_component_router_link, {
+            to: "/",
+            class: "nav-item",
+            "active-class": "active"
+          }, {
+            default: withCtx(() => [..._cache[0] || (_cache[0] = [
+              createBaseVNode("svg", {
+                width: "20",
+                height: "20",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                xmlns: "http://www.w3.org/2000/svg"
+              }, [
+                createBaseVNode("path", {
+                  d: "M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }),
+                createBaseVNode("path", {
+                  d: "M9 22V12H15V22",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                })
+              ], -1),
+              createBaseVNode("span", null, "Головна", -1)
+            ])]),
+            _: 1
+          }),
+          createVNode(_component_router_link, {
+            to: "/search",
+            class: "nav-item",
+            "active-class": "active"
+          }, {
+            default: withCtx(() => [..._cache[1] || (_cache[1] = [
+              createBaseVNode("svg", {
+                width: "20",
+                height: "20",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                xmlns: "http://www.w3.org/2000/svg"
+              }, [
+                createBaseVNode("circle", {
+                  cx: "11",
+                  cy: "11",
+                  r: "8",
+                  stroke: "currentColor",
+                  "stroke-width": "2"
+                }),
+                createBaseVNode("path", {
+                  d: "M21 21L16.65 16.65",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round"
+                })
+              ], -1),
+              createBaseVNode("span", null, "Пошук", -1)
+            ])]),
+            _: 1
+          }),
+          createVNode(_component_router_link, {
+            to: "/library",
+            class: "nav-item",
+            "active-class": "active"
+          }, {
+            default: withCtx(() => [..._cache[2] || (_cache[2] = [
+              createBaseVNode("svg", {
+                width: "20",
+                height: "20",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                xmlns: "http://www.w3.org/2000/svg"
+              }, [
+                createBaseVNode("path", {
+                  d: "M20 12V20C20 20.5304 19.7893 21.0391 19.4142 21.4142C19.0391 21.7893 18.5304 22 18 22H6C5.46957 22 4.96086 21.7893 4.58579 21.4142C4.21071 21.0391 4 20.5304 4 20V12",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }),
+                createBaseVNode("path", {
+                  d: "M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }),
+                createBaseVNode("path", {
+                  d: "M4 12H2",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }),
+                createBaseVNode("path", {
+                  d: "M22 12H20",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }),
+                createBaseVNode("path", {
+                  d: "M12 4V2",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }),
+                createBaseVNode("path", {
+                  d: "M12 22V20",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                })
+              ], -1),
+              createBaseVNode("span", null, "Бібліотека", -1)
+            ])]),
+            _: 1
+          }),
+          _cache[7] || (_cache[7] = createBaseVNode("div", { class: "divider" }, null, -1)),
+          createBaseVNode("div", _hoisted_3$8, [
+            _cache[6] || (_cache[6] = createStaticVNode('<div class="section-header" data-v-a6d0654b><span data-v-a6d0654b>Плейлисти</span><button class="add-playlist-btn" data-v-a6d0654b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" data-v-a6d0654b><path d="M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" data-v-a6d0654b></path><path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" data-v-a6d0654b></path></svg></button></div>', 1)),
+            createVNode(_component_router_link, {
+              to: "/playlist/favorites",
+              class: "playlist-item"
+            }, {
+              default: withCtx(() => [..._cache[3] || (_cache[3] = [
+                createBaseVNode("div", { class: "playlist-icon" }, [
+                  createBaseVNode("svg", {
+                    width: "16",
+                    height: "16",
+                    viewBox: "0 0 24 24",
+                    fill: "none",
+                    xmlns: "http://www.w3.org/2000/svg"
+                  }, [
+                    createBaseVNode("path", {
+                      d: "M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z",
+                      fill: "#FF0000"
+                    })
+                  ])
+                ], -1),
+                createBaseVNode("span", null, "Улюблені треки", -1)
+              ])]),
+              _: 1
+            }),
+            createVNode(_component_router_link, {
+              to: "/playlist/recent",
+              class: "playlist-item"
+            }, {
+              default: withCtx(() => [..._cache[4] || (_cache[4] = [
+                createBaseVNode("div", { class: "playlist-icon" }, [
+                  createBaseVNode("svg", {
+                    width: "16",
+                    height: "16",
+                    viewBox: "0 0 24 24",
+                    fill: "none",
+                    xmlns: "http://www.w3.org/2000/svg"
+                  }, [
+                    createBaseVNode("path", {
+                      d: "M12 8V12L15 15",
+                      stroke: "currentColor",
+                      "stroke-width": "2",
+                      "stroke-linecap": "round",
+                      "stroke-linejoin": "round"
+                    }),
+                    createBaseVNode("circle", {
+                      cx: "12",
+                      cy: "12",
+                      r: "10",
+                      stroke: "currentColor",
+                      "stroke-width": "2"
+                    })
+                  ])
+                ], -1),
+                createBaseVNode("span", null, "Нещодавно", -1)
+              ])]),
+              _: 1
+            }),
+            createVNode(_component_router_link, {
+              to: "/playlist/downloads",
+              class: "playlist-item"
+            }, {
+              default: withCtx(() => [..._cache[5] || (_cache[5] = [
+                createBaseVNode("div", { class: "playlist-icon" }, [
+                  createBaseVNode("svg", {
+                    width: "16",
+                    height: "16",
+                    viewBox: "0 0 24 24",
+                    fill: "none",
+                    xmlns: "http://www.w3.org/2000/svg"
+                  }, [
+                    createBaseVNode("path", {
+                      d: "M12 3V16M12 16L16 12M12 16L8 12",
+                      stroke: "currentColor",
+                      "stroke-width": "2",
+                      "stroke-linecap": "round",
+                      "stroke-linejoin": "round"
+                    }),
+                    createBaseVNode("path", {
+                      d: "M20 21H4",
+                      stroke: "currentColor",
+                      "stroke-width": "2",
+                      "stroke-linecap": "round"
+                    })
+                  ])
+                ], -1),
+                createBaseVNode("span", null, "Завантажені", -1)
+              ])]),
+              _: 1
+            })
+          ])
+        ]),
+        createBaseVNode("div", _hoisted_4$8, [
+          isAuthenticated.value || isGuest.value ? (openBlock(), createElementBlock("div", _hoisted_5$8, [
+            createBaseVNode("div", {
+              class: normalizeClass(["avatar", { "avatar-guest": isGuest.value }])
+            }, [..._cache[8] || (_cache[8] = [
+              createBaseVNode("svg", {
+                width: "24",
+                height: "24",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                xmlns: "http://www.w3.org/2000/svg"
+              }, [
+                createBaseVNode("circle", {
+                  cx: "12",
+                  cy: "8",
+                  r: "4",
+                  stroke: "currentColor",
+                  "stroke-width": "2"
+                }),
+                createBaseVNode("path", {
+                  d: "M5 20C5 16.134 8.13401 13 12 13C15.866 13 19 16.134 19 20",
+                  stroke: "currentColor",
+                  "stroke-width": "2"
+                })
+              ], -1)
+            ])], 2),
+            createBaseVNode("div", _hoisted_6$5, [
+              createBaseVNode("div", _hoisted_7$5, toDisplayString(isGuest.value ? "Гість" : "Користувач"), 1),
+              createBaseVNode("div", _hoisted_8$5, toDisplayString(isGuest.value ? "Обмежений доступ" : "Особистий акаунт"), 1)
+            ])
+          ])) : (openBlock(), createElementBlock("div", {
+            key: 1,
+            class: "profile-info",
+            onClick: login,
+            style: { "cursor": "pointer" }
+          }, [..._cache[9] || (_cache[9] = [
+            createStaticVNode('<div class="avatar avatar-login" data-v-a6d0654b><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" data-v-a6d0654b><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-a6d0654b></path><polyline points="10 17 15 12 10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-a6d0654b></polyline><line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-a6d0654b></line></svg></div><div class="user-details" data-v-a6d0654b><div class="username" style="color:#ff0000;" data-v-a6d0654b>Увійти</div><div class="status" data-v-a6d0654b>Отримати повний доступ</div></div>', 2)
+          ])])),
+          isAuthenticated.value || isGuest.value ? (openBlock(), createElementBlock("button", {
+            key: 2,
+            class: "settings-btn",
+            onClick: logout,
+            title: "Вийти"
+          }, [..._cache[10] || (_cache[10] = [
+            createBaseVNode("svg", {
+              width: "16",
+              height: "16",
+              viewBox: "0 0 24 24",
+              fill: "none",
+              xmlns: "http://www.w3.org/2000/svg"
+            }, [
+              createBaseVNode("path", {
+                d: "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4",
+                stroke: "currentColor",
+                "stroke-width": "2",
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round"
+              }),
+              createBaseVNode("polyline", {
+                points: "16 17 21 12 16 7",
+                stroke: "currentColor",
+                "stroke-width": "2",
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round"
+              }),
+              createBaseVNode("line", {
+                x1: "21",
+                y1: "12",
+                x2: "9",
+                y2: "12",
+                stroke: "currentColor",
+                "stroke-width": "2",
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round"
+              })
+            ], -1)
+          ])])) : createCommentVNode("", true)
+        ])
+      ]);
+    };
+  }
+});
+const _export_sfc = (sfc, props) => {
+  const target = sfc.__vccOpts || sfc;
+  for (const [key, val] of props) {
+    target[key] = val;
+  }
+  return target;
+};
+const Sidebar = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["__scopeId", "data-v-a6d0654b"]]);
+const _hoisted_1$7 = { class: "player-bar" };
+const _hoisted_2$7 = { class: "track-info" };
+const _hoisted_3$7 = { class: "album-art" };
+const _hoisted_4$7 = ["src", "alt"];
+const _hoisted_5$7 = {
+  key: 1,
+  class: "placeholder-art"
+};
+const _hoisted_6$4 = { class: "track-details" };
+const _hoisted_7$4 = { class: "track-title" };
+const _hoisted_8$4 = { class: "track-artist" };
+const _hoisted_9$4 = {
+  key: 0,
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "#FF0000",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+const _hoisted_10$4 = {
+  key: 1,
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+const _hoisted_11$4 = { class: "player-controls" };
+const _hoisted_12$4 = { class: "control-buttons" };
+const _hoisted_13$4 = {
+  key: 0,
+  width: "32",
+  height: "32",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+const _hoisted_14$4 = {
+  key: 1,
+  width: "32",
+  height: "32",
+  viewBox: "0 0 24 24",
+  fill: "currentColor",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+const _hoisted_15$4 = {
+  key: 0,
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+const _hoisted_16$4 = {
+  key: 1,
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+const _hoisted_17$4 = { class: "progress-container" };
+const _hoisted_18$4 = { class: "time" };
+const _hoisted_19$4 = { class: "time" };
+const _hoisted_20$4 = { class: "additional-controls" };
+const _hoisted_21$4 = { class: "volume-control" };
+const _hoisted_22$4 = {
+  key: 0,
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+const _hoisted_23$4 = {
+  key: 1,
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+const _hoisted_24$4 = {
+  key: 2,
+  width: "20",
+  height: "20",
+  viewBox: "0 0 24 24",
+  fill: "none",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+const _sfc_main$7 = /* @__PURE__ */ defineComponent({
+  __name: "PlayerBar",
+  setup(__props) {
+    const playerStore = usePlayerStore();
+    const isPlaying = computed(() => playerStore.isPlaying);
+    const currentTrack = computed(() => playerStore.currentTrack);
+    const isLiked = computed(() => playerStore.currentTrack ? playerStore.isTrackLiked(playerStore.currentTrack.id) : false);
+    const isShuffled = computed(() => playerStore.isShuffled);
+    const isMuted = computed(() => playerStore.isMuted);
+    const repeatMode = computed(() => playerStore.repeatMode);
+    const currentTime = computed(() => playerStore.currentProgress);
+    const duration = computed(() => playerStore.duration);
+    const volume = computed(() => playerStore.volume);
+    const progressPercent = computed(() => playerStore.progressPercent);
+    const volumePercent = computed(() => playerStore.volumePercent);
+    const togglePlayPause = () => {
+      playerStore.togglePlayPause();
+    };
+    const toggleLike = () => {
+      if (playerStore.currentTrack) {
+        playerStore.toggleLike(playerStore.currentTrack.id);
+      }
+    };
+    const shuffleQueue = () => {
+      playerStore.toggleShuffle();
+    };
+    const toggleRepeat = () => {
+      playerStore.toggleRepeat();
+    };
+    const previousTrack = () => {
+      playerStore.previousTrack();
+    };
+    const nextTrack = () => {
+      playerStore.nextTrack();
+    };
+    const toggleMute = () => {
+      playerStore.toggleMute();
+    };
+    const toggleQueue = () => {
+      console.log("Toggle queue");
+    };
+    const seekTo = (event) => {
+      const progressBar = event.currentTarget;
+      const rect = progressBar.getBoundingClientRect();
+      const percent = (event.clientX - rect.left) / rect.width;
+      playerStore.seekTo(percent * 100);
+    };
+    const setVolume = (event) => {
+      const volumeSlider = event.currentTarget;
+      const rect = volumeSlider.getBoundingClientRect();
+      const percent = (event.clientX - rect.left) / rect.width;
+      playerStore.setVolume(percent * 100);
+    };
+    const formatTime = playerStore.formatTime;
+    return (_ctx, _cache) => {
+      var _a, _b, _c;
+      return openBlock(), createElementBlock("div", _hoisted_1$7, [
+        createBaseVNode("div", _hoisted_2$7, [
+          createBaseVNode("div", _hoisted_3$7, [
+            ((_a = currentTrack.value) == null ? void 0 : _a.albumArt) ? (openBlock(), createElementBlock("img", {
+              key: 0,
+              src: currentTrack.value.albumArt,
+              alt: currentTrack.value.title
+            }, null, 8, _hoisted_4$7)) : (openBlock(), createElementBlock("div", _hoisted_5$7, [..._cache[0] || (_cache[0] = [
+              createBaseVNode("svg", {
+                width: "48",
+                height: "48",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                xmlns: "http://www.w3.org/2000/svg"
+              }, [
+                createBaseVNode("path", {
+                  d: "M12 3V16M12 16L16 12M12 16L8 12",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }),
+                createBaseVNode("circle", {
+                  cx: "12",
+                  cy: "12",
+                  r: "9",
+                  stroke: "currentColor",
+                  "stroke-width": "2"
+                })
+              ], -1)
+            ])]))
+          ]),
+          createBaseVNode("div", _hoisted_6$4, [
+            createBaseVNode("div", _hoisted_7$4, toDisplayString(((_b = currentTrack.value) == null ? void 0 : _b.title) || "Оберіть трек"), 1),
+            createBaseVNode("div", _hoisted_8$4, toDisplayString(((_c = currentTrack.value) == null ? void 0 : _c.artist) || "Невідомий виконавець"), 1)
+          ]),
+          createBaseVNode("button", {
+            class: normalizeClass(["like-btn", { liked: isLiked.value }]),
+            onClick: toggleLike
+          }, [
+            isLiked.value ? (openBlock(), createElementBlock("svg", _hoisted_9$4, [..._cache[1] || (_cache[1] = [
+              createBaseVNode("path", { d: "M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" }, null, -1)
+            ])])) : (openBlock(), createElementBlock("svg", _hoisted_10$4, [..._cache[2] || (_cache[2] = [
+              createBaseVNode("path", {
+                d: "M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z",
+                stroke: "currentColor",
+                "stroke-width": "2"
+              }, null, -1)
+            ])]))
+          ], 2)
+        ]),
+        createBaseVNode("div", _hoisted_11$4, [
+          createBaseVNode("div", _hoisted_12$4, [
+            createBaseVNode("button", {
+              class: normalizeClass(["control-btn", { active: isShuffled.value }]),
+              onClick: shuffleQueue
+            }, [..._cache[3] || (_cache[3] = [
+              createStaticVNode('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" data-v-677018f0><path d="M16 3H21V8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-677018f0></path><path d="M4 20L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-677018f0></path><path d="M21 16V21H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-677018f0></path><path d="M15 15L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-677018f0></path><path d="M4 4L9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-677018f0></path></svg>', 1)
+            ])], 2),
+            createBaseVNode("button", {
+              class: "control-btn",
+              onClick: previousTrack
+            }, [..._cache[4] || (_cache[4] = [
+              createBaseVNode("svg", {
+                width: "24",
+                height: "24",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                xmlns: "http://www.w3.org/2000/svg"
+              }, [
+                createBaseVNode("path", {
+                  d: "M11 17L6 12L11 7",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }),
+                createBaseVNode("path", {
+                  d: "M18 17L13 12L18 7",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                })
+              ], -1)
+            ])]),
+            createBaseVNode("button", {
+              class: "play-pause-btn",
+              onClick: togglePlayPause
+            }, [
+              isPlaying.value ? (openBlock(), createElementBlock("svg", _hoisted_13$4, [..._cache[5] || (_cache[5] = [
+                createBaseVNode("rect", {
+                  x: "6",
+                  y: "4",
+                  width: "4",
+                  height: "16",
+                  fill: "currentColor"
+                }, null, -1),
+                createBaseVNode("rect", {
+                  x: "14",
+                  y: "4",
+                  width: "4",
+                  height: "16",
+                  fill: "currentColor"
+                }, null, -1)
+              ])])) : (openBlock(), createElementBlock("svg", _hoisted_14$4, [..._cache[6] || (_cache[6] = [
+                createBaseVNode("path", {
+                  d: "M8 5V19L19 12L8 5Z",
+                  fill: "currentColor"
+                }, null, -1)
+              ])]))
+            ]),
+            createBaseVNode("button", {
+              class: "control-btn",
+              onClick: nextTrack
+            }, [..._cache[7] || (_cache[7] = [
+              createBaseVNode("svg", {
+                width: "24",
+                height: "24",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                xmlns: "http://www.w3.org/2000/svg"
+              }, [
+                createBaseVNode("path", {
+                  d: "M13 17L18 12L13 7",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }),
+                createBaseVNode("path", {
+                  d: "M6 17L11 12L6 7",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                })
+              ], -1)
+            ])]),
+            createBaseVNode("button", {
+              class: normalizeClass(["control-btn", { active: repeatMode.value !== "off" }]),
+              onClick: toggleRepeat
+            }, [
+              repeatMode.value === "one" ? (openBlock(), createElementBlock("svg", _hoisted_15$4, [..._cache[8] || (_cache[8] = [
+                createStaticVNode('<path d="M17 2L21 6L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-677018f0></path><path d="M3 11V9C3 8.46957 3.21071 7.96086 3.58579 7.58579C3.96086 7.21071 4.46957 7 5 7H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-677018f0></path><path d="M7 22L3 18L7 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-677018f0></path><path d="M21 13V15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-677018f0></path><circle cx="12" cy="12" r="1" fill="currentColor" data-v-677018f0></circle>', 5)
+              ])])) : (openBlock(), createElementBlock("svg", _hoisted_16$4, [..._cache[9] || (_cache[9] = [
+                createBaseVNode("path", {
+                  d: "M17 2L21 6L17 10",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }, null, -1),
+                createBaseVNode("path", {
+                  d: "M3 11V9C3 8.46957 3.21071 7.96086 3.58579 7.58579C3.96086 7.21071 4.46957 7 5 7H21",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }, null, -1),
+                createBaseVNode("path", {
+                  d: "M7 22L3 18L7 14",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }, null, -1),
+                createBaseVNode("path", {
+                  d: "M21 13V15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H3",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }, null, -1)
+              ])]))
+            ], 2)
+          ]),
+          createBaseVNode("div", _hoisted_17$4, [
+            createBaseVNode("span", _hoisted_18$4, toDisplayString(unref(formatTime)(currentTime.value)), 1),
+            createBaseVNode("div", {
+              class: "progress-bar",
+              onClick: seekTo
+            }, [
+              createBaseVNode("div", {
+                class: "progress-fill",
+                style: normalizeStyle({ width: progressPercent.value + "%" })
+              }, null, 4),
+              createBaseVNode("div", {
+                class: "progress-handle",
+                style: normalizeStyle({ left: progressPercent.value + "%" })
+              }, null, 4)
+            ]),
+            createBaseVNode("span", _hoisted_19$4, toDisplayString(unref(formatTime)(duration.value)), 1)
+          ])
+        ]),
+        createBaseVNode("div", _hoisted_20$4, [
+          createBaseVNode("button", {
+            class: "queue-btn",
+            onClick: toggleQueue
+          }, [..._cache[10] || (_cache[10] = [
+            createStaticVNode('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" data-v-677018f0><line x1="8" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" data-v-677018f0></line><line x1="8" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" data-v-677018f0></line><line x1="8" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" data-v-677018f0></line><line x1="3" y1="6" x2="3.01" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" data-v-677018f0></line><line x1="3" y1="12" x2="3.01" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" data-v-677018f0></line><line x1="3" y1="18" x2="3.01" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" data-v-677018f0></line></svg>', 1)
+          ])]),
+          createBaseVNode("div", _hoisted_21$4, [
+            createBaseVNode("button", {
+              class: "volume-btn",
+              onClick: toggleMute
+            }, [
+              isMuted.value || volume.value === 0 ? (openBlock(), createElementBlock("svg", _hoisted_22$4, [..._cache[11] || (_cache[11] = [
+                createBaseVNode("path", {
+                  d: "M11 5L6 9H2V15H6L11 19V5Z",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }, null, -1),
+                createBaseVNode("path", {
+                  d: "M23 9L17 15",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }, null, -1),
+                createBaseVNode("path", {
+                  d: "M17 9L23 15",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }, null, -1)
+              ])])) : volume.value > 0.5 ? (openBlock(), createElementBlock("svg", _hoisted_23$4, [..._cache[12] || (_cache[12] = [
+                createBaseVNode("path", {
+                  d: "M11 5L6 9H2V15H6L11 19V5Z",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }, null, -1),
+                createBaseVNode("path", {
+                  d: "M15.54 8.46C16.4734 9.3939 17.0001 10.6589 17.0001 12C17.0001 13.3411 16.4734 14.6061 15.54 15.54",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round"
+                }, null, -1),
+                createBaseVNode("path", {
+                  d: "M19.07 4.93C20.9447 6.80527 21.9979 9.34836 21.9979 12C21.9979 14.6516 20.9447 17.1947 19.07 19.07",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round"
+                }, null, -1)
+              ])])) : (openBlock(), createElementBlock("svg", _hoisted_24$4, [..._cache[13] || (_cache[13] = [
+                createBaseVNode("path", {
+                  d: "M11 5L6 9H2V15H6L11 19V5Z",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round",
+                  "stroke-linejoin": "round"
+                }, null, -1),
+                createBaseVNode("path", {
+                  d: "M15.54 8.46C16.4734 9.3939 17.0001 10.6589 17.0001 12C17.0001 13.3411 16.4734 14.6061 15.54 15.54",
+                  stroke: "currentColor",
+                  "stroke-width": "2",
+                  "stroke-linecap": "round"
+                }, null, -1)
+              ])]))
+            ]),
+            createBaseVNode("div", {
+              class: "volume-slider",
+              onClick: setVolume
+            }, [
+              createBaseVNode("div", {
+                class: "volume-fill",
+                style: normalizeStyle({ width: volumePercent.value + "%" })
+              }, null, 4),
+              createBaseVNode("div", {
+                class: "volume-handle",
+                style: normalizeStyle({ left: volumePercent.value + "%" })
+              }, null, 4)
+            ])
+          ])
+        ])
+      ]);
+    };
+  }
+});
+const PlayerBar = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["__scopeId", "data-v-677018f0"]]);
+const _hoisted_1$6 = { id: "app" };
+const _hoisted_2$6 = { class: "main-layout" };
+const _hoisted_3$6 = {
+  key: 0,
+  class: "loading-screen"
+};
+const _hoisted_4$6 = {
+  key: 1,
+  class: "error-screen"
+};
+const _hoisted_5$6 = { class: "content" };
+const _sfc_main$6 = /* @__PURE__ */ defineComponent({
+  __name: "App",
+  setup(__props) {
+    const playerStore = usePlayerStore();
+    const isLoading = /* @__PURE__ */ ref(true);
+    const loadError = /* @__PURE__ */ ref(null);
+    onMounted(async () => {
+      await loadData();
+    });
+    const loadData = async () => {
+      isLoading.value = true;
+      loadError.value = null;
+      try {
+        await Promise.all([
+          playerStore.loadRecentlyPlayed(),
+          playerStore.loadPlaylists(),
+          playerStore.loadLikedTracks()
+        ]);
+      } catch (error) {
+        console.error("Failed to load initial data:", error);
+        loadError.value = "Failed to load data";
+      } finally {
+        isLoading.value = false;
+      }
+    };
+    const retryLoad = () => {
+      loadData();
+    };
+    return (_ctx, _cache) => {
+      const _component_router_view = resolveComponent("router-view");
+      return openBlock(), createElementBlock("div", _hoisted_1$6, [
+        createBaseVNode("div", _hoisted_2$6, [
+          isLoading.value ? (openBlock(), createElementBlock("div", _hoisted_3$6, [..._cache[0] || (_cache[0] = [
+            createBaseVNode("div", { class: "spinner" }, null, -1),
+            createBaseVNode("p", null, "Loading...", -1)
+          ])])) : loadError.value ? (openBlock(), createElementBlock("div", _hoisted_4$6, [
+            createBaseVNode("p", null, toDisplayString(loadError.value), 1),
+            createBaseVNode("button", { onClick: retryLoad }, "Retry")
+          ])) : (openBlock(), createElementBlock(Fragment, { key: 2 }, [
+            createVNode(Sidebar),
+            createBaseVNode("main", _hoisted_5$6, [
+              createVNode(PlayerBar),
+              createVNode(_component_router_view)
+            ])
+          ], 64))
+        ])
+      ]);
+    };
+  }
+});
 const _hoisted_1$5 = { class: "home-page" };
 const _hoisted_2$5 = { class: "section" };
 const _hoisted_3$5 = { class: "cards-grid" };
@@ -13918,13 +14778,6 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const _export_sfc = (sfc, props) => {
-  const target = sfc.__vccOpts || sfc;
-  for (const [key, val] of props) {
-    target[key] = val;
-  }
-  return target;
-};
 const Home = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["__scopeId", "data-v-1f0b1979"]]);
 const _hoisted_1$4 = { class: "search-page" };
 const _hoisted_2$4 = { class: "search-header" };
@@ -15424,4 +16277,4 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(router);
 app.mount("#app");
-//# sourceMappingURL=index-WMyaQ_3l.js.map
+//# sourceMappingURL=index-_bKxkXAX.js.map
