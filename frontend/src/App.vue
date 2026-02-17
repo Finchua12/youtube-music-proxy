@@ -11,7 +11,7 @@
       </div>
       <template v-else>
         <Sidebar />
-        <main class="content">
+        <main class="main-content">
           <PlayerBar />
           <router-view />
         </main>
@@ -72,9 +72,10 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
 }
 
 #app {
@@ -90,7 +91,7 @@ body {
   overflow: hidden;
 }
 
-.content {
+.main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -106,32 +107,5 @@ body {
   justify-content: center;
   gap: 16px;
   color: var(--text-secondary);
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--bg-tertiary);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.error-screen button {
-  padding: 10px 24px;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.error-screen button:hover {
-  background: var(--accent-hover);
 }
 </style>

@@ -1,27 +1,19 @@
 <template>
   <aside class="sidebar">
-    <div class="logo-container">
-      <div class="logo">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20.5 15.5L14.5 12V20L20.5 16.5V24C20.5 24.5523 20.0523 25 19.5 25H5.5C4.94772 25 4.5 24.5523 4.5 24V8C4.5 7.44772 4.94772 7 5.5 7H19.5C20.0523 7 20.5 7.44772 20.5 8V15.5Z" fill="#FF0000"/>
-          <path d="M23.5 11C24.8807 11 26 9.88071 26 8.5C26 7.11929 24.8807 6 23.5 6C22.1193 6 21 7.11929 21 8.5C21 9.88071 22.1193 11 23.5 11Z" fill="#FF0000"/>
-          <path d="M23.5 26C24.8807 26 26 24.8807 26 23.5C26 22.1193 24.8807 21 23.5 21C22.1193 21 21 22.1193 21 23.5C21 24.8807 22.1193 26 23.5 26Z" fill="#FF0000"/>
-        </svg>
-        <span class="logo-text">MusicProxy</span>
-      </div>
+    <div class="logo">
+      <span class="logo-text">MusicProxy</span>
     </div>
 
     <nav class="nav-menu">
       <router-link to="/" class="nav-item" active-class="active">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M9 22V12H15V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0393 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span>Головна</span>
       </router-link>
 
       <router-link to="/search" class="nav-item" active-class="active">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
           <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
           <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
@@ -29,13 +21,8 @@
       </router-link>
 
       <router-link to="/library" class="nav-item" active-class="active">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
           <path d="M20 12V20C20 20.5304 19.7893 21.0391 19.4142 21.4142C19.0391 21.7893 18.5304 22 18 22H6C5.46957 22 4.96086 21.7893 4.58579 21.4142C4.21071 21.0391 4 20.5304 4 20V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M4 12H2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M22 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M12 4V2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M12 22V20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span>Бібліотека</span>
       </router-link>
@@ -45,173 +32,70 @@
       <div class="playlists-section">
         <div class="section-header">
           <span>Плейлисти</span>
-          <button class="add-playlist-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </button>
         </div>
 
-        <router-link to="/playlist/favorites" class="playlist-item">
-          <div class="playlist-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="#FF0000"/>
-            </svg>
-          </div>
-          <span>Улюблені треки</span>
+        <router-link to="/playlist/favorites" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444">
+            <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z"/>
+          </svg>
+          <span>Улюблені</span>
         </router-link>
 
-        <router-link to="/playlist/recent" class="playlist-item">
-          <div class="playlist-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 8V12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-            </svg>
-          </div>
+        <router-link to="/playlist/recent" class="nav-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6V12L16 14"/>
+          </svg>
           <span>Нещодавно</span>
-        </router-link>
-
-        <router-link to="/playlist/downloads" class="playlist-item">
-          <div class="playlist-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 3V16M12 16L16 12M12 16L8 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M20 21H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span>Завантажені</span>
         </router-link>
       </div>
     </nav>
-
-    <div class="user-profile">
-      <div v-if="isAuthenticated || isGuest" class="profile-info">
-        <div class="avatar" :class="{ 'avatar-guest': isGuest }">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
-            <path d="M5 20C5 16.134 8.13401 13 12 13C15.866 13 19 16.134 19 20" stroke="currentColor" stroke-width="2"/>
-          </svg>
-        </div>
-        <div class="user-details">
-          <div class="username">{{ isGuest ? 'Гість' : 'Користувач' }}</div>
-          <div class="status">{{ isGuest ? 'Обмежений доступ' : 'Особистий акаунт' }}</div>
-        </div>
-      </div>
-      
-      <div v-else class="profile-info" @click="login" style="cursor: pointer;">
-        <div class="avatar avatar-login">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="10 17 15 12 10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="user-details">
-          <div class="username" style="color: #ff0000;">Увійти</div>
-          <div class="status">Отримати повний доступ</div>
-        </div>
-      </div>
-      
-      <button v-if="isAuthenticated || isGuest" class="settings-btn" @click="logout" title="Вийти">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-const isAuthenticated = ref(false)
-const isGuest = ref(false)
-
-onMounted(() => {
-  checkAuthStatus()
-})
-
-const checkAuthStatus = () => {
-  const token = localStorage.getItem('access_token')
-  const authMode = localStorage.getItem('auth_mode')
-  
-  isAuthenticated.value = !!token
-  isGuest.value = authMode === 'guest'
-}
-
-const login = () => {
-  router.push('/login')
-}
-
-const logout = () => {
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('refresh_token')
-  localStorage.removeItem('expires_at')
-  localStorage.removeItem('auth_mode')
-  
-  isAuthenticated.value = false
-  isGuest.value = false
-  
-  // Перезавантажуємо сторінку для очищення стану
-  window.location.reload()
-}
 </script>
 
 <style scoped>
 .sidebar {
-  width: 240px;
+  width: 260px;
   background: var(--bg-secondary);
   height: 100%;
   display: flex;
   flex-direction: column;
+  padding: var(--spacing-lg) 0;
   border-right: 1px solid var(--border-color);
-  padding: 16px 0;
-  transition: width 0.3s ease;
-}
-
-.logo-container {
-  padding: 0 16px 16px;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 16px;
 }
 
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logo svg {
-  color: #FF0000;
+  padding: 0 var(--spacing-lg) var(--spacing-lg);
 }
 
 .logo-text {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .nav-menu {
   flex: 1;
-  padding: 0 12px;
+  padding: 0 var(--spacing-sm);
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  text-decoration: none;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   color: var(--text-secondary);
+  text-decoration: none;
   font-weight: 500;
-  transition: all 0.2s ease;
-  margin-bottom: 4px;
+  transition: all 0.2s;
+  border-radius: var(--radius-md);
+  margin-bottom: 2px;
 }
 
 .nav-item:hover {
@@ -220,8 +104,8 @@ const logout = () => {
 }
 
 .nav-item.active {
-  background: var(--accent);
-  color: white;
+  background: var(--hover-bg);
+  color: var(--text-primary);
 }
 
 .nav-item svg {
@@ -231,135 +115,19 @@ const logout = () => {
 .divider {
   height: 1px;
   background: var(--border-color);
-  margin: 16px 0;
-}
-
-.playlists-section {
-  margin-top: 16px;
+  margin: var(--spacing-md) 0;
 }
 
 .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 16px;
-  margin-bottom: 8px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
 }
 
 .section-header span {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-.add-playlist-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.add-playlist-btn:hover {
-  background: var(--hover-bg);
-  color: var(--text-primary);
-}
-
-.playlist-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  text-decoration: none;
-  color: var(--text-secondary);
-  font-weight: 500;
-  transition: all 0.2s ease;
-  margin-bottom: 4px;
-}
-
-.playlist-item:hover {
-  background: var(--hover-bg);
-  color: var(--text-primary);
-}
-
-.playlist-icon {
-  flex-shrink: 0;
-}
-
-.user-profile {
-  padding: 16px;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.profile-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--bg-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-}
-
-.avatar-guest {
-  background: #666;
-}
-
-.avatar-login {
-  background: rgba(255, 0, 0, 0.1);
-  color: #ff0000;
-  border: 1px solid rgba(255, 0, 0, 0.3);
-}
-
-.user-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.username {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 14px;
-}
-
-.status {
-  font-size: 12px;
-  color: var(--text-tertiary);
-}
-
-.settings-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.settings-btn:hover {
-  background: var(--hover-bg);
-  color: var(--text-primary);
 }
 </style>
