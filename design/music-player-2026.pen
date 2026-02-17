@@ -1,0 +1,393 @@
+{
+  "nodes": [
+    {
+      "id": "app-frame",
+      "type": "frame",
+      "props": {
+        "width": 1440,
+        "height": 900,
+        "background": "#0a0a0f"
+      }
+    },
+    {
+      "id": "sidebar",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 0,
+        "width": 280,
+        "height": 900,
+        "background": "linear-gradient(180deg, #12121a 0%, #0a0a0f 100%)"
+      }
+    },
+    {
+      "id": "logo",
+      "type": "text",
+      "props": {
+        "x": 24,
+        "y": 24,
+        "content": "YouTube Music",
+        "fontSize": 24,
+        "fontWeight": 700,
+        "color": "#ffffff"
+      }
+    },
+    {
+      "id": "nav-home",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 80,
+        "width": 280,
+        "height": 48,
+        "background": "transparent"
+      }
+    },
+    {
+      "id": "nav-home-icon",
+      "type": "svg",
+      "props": {
+        "x": 24,
+        "y": 14,
+        "width": 20,
+        "height": 20,
+        "path": "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+      }
+    },
+    {
+      "id": "nav-home-text",
+      "type": "text",
+      "props": {
+        "x": 60,
+        "y": 16,
+        "content": "Головна",
+        "fontSize": 15,
+        "fontWeight": 500,
+        "color": "#ffffff"
+      }
+    },
+    {
+      "id": "nav-search",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 128,
+        "width": 280,
+        "height": 48,
+        "background": "transparent"
+      }
+    },
+    {
+      "id": "nav-search-icon",
+      "type": "svg",
+      "props": {
+        "x": 24,
+        "y": 14,
+        "width": 20,
+        "height": 20,
+        "path": "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      }
+    },
+    {
+      "id": "nav-search-text",
+      "type": "text",
+      "props": {
+        "x": 60,
+        "y": 16,
+        "content": "Пошук",
+        "fontSize": 15,
+        "fontWeight": 500,
+        "color": "#a0a0b0"
+      }
+    },
+    {
+      "id": "nav-library",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 176,
+        "width": 280,
+        "height": 48,
+        "background": "transparent"
+      }
+    },
+    {
+      "id": "nav-library-text",
+      "type": "text",
+      "props": {
+        "x": 60,
+        "y": 16,
+        "content": "Бібліотека",
+        "fontSize": 15,
+        "fontWeight": 500,
+        "color": "#a0a0b0"
+      }
+    },
+    {
+      "id": "main-content",
+      "type": "frame",
+      "props": {
+        "x": 280,
+        "y": 0,
+        "width": 1160,
+        "height": 780,
+        "background": "linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%)"
+      }
+    },
+    {
+      "id": "header",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 0,
+        "width": 1160,
+        "height": 72,
+        "background": "rgba(0,0,0,0.3)"
+      }
+    },
+    {
+      "id": "search-bar",
+      "type": "frame",
+      "props": {
+        "x": 320,
+        "y": 16,
+        "width": 400,
+        "height": 40,
+        "background": "#2a2a3a",
+        "borderRadius": 20
+      }
+    },
+    {
+      "id": "search-input",
+      "type": "text",
+      "props": {
+        "x": 340,
+        "y": 26,
+        "content": "Пошук треків, виконавців...",
+        "fontSize": 14,
+        "color": "#606070"
+      }
+    },
+    {
+      "id": "hero-section",
+      "type": "frame",
+      "props": {
+        "x": 24,
+        "y": 100,
+        "width": 1112,
+        "height": 280,
+        "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        "borderRadius": 24
+      }
+    },
+    {
+      "id": "hero-title",
+      "type": "text",
+      "props": {
+        "x": 40,
+        "y": 40,
+        "content": "Сьогоднішні хіти",
+        "fontSize": 36,
+        "fontWeight": 800,
+        "color": "#ffffff"
+      }
+    },
+    {
+      "id": "hero-subtitle",
+      "type": "text",
+      "props": {
+        "x": 40,
+        "y": 90,
+        "content": "Найпопулярніші треки цього тижня",
+        "fontSize": 16,
+        "color": "rgba(255,255,255,0.7)"
+      }
+    },
+    {
+      "id": "hero-play-btn",
+      "type": "frame",
+      "props": {
+        "x": 40,
+        "y": 180,
+        "width": 140,
+        "height": 48,
+        "background": "#ffffff",
+        "borderRadius": 24
+      }
+    },
+    {
+      "id": "hero-play-text",
+      "type": "text",
+      "props": {
+        "x": 55,
+        "y": 196,
+        "content": "Відтворити",
+        "fontSize": 15,
+        "fontWeight": 600,
+        "color": "#000000"
+      }
+    },
+    {
+      "id": "tracks-grid",
+      "type": "frame",
+      "props": {
+        "x": 24,
+        "y": 420,
+        "width": 1112,
+        "height": 320
+      }
+    },
+    {
+      "id": "track-card-1",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 280,
+        "background": "#1e1e2e",
+        "borderRadius": 16
+      }
+    },
+    {
+      "id": "track-img-1",
+      "type": "frame",
+      "props": {
+        "x": 8,
+        "y": 8,
+        "width": 164,
+        "height": 164,
+        "background": "#3a3a4a",
+        "borderRadius": 12
+      }
+    },
+    {
+      "id": "track-title-1",
+      "type": "text",
+      "props": {
+        "x": 12,
+        "y": 185,
+        "content": "Track Title",
+        "fontSize": 14,
+        "fontWeight": 600,
+        "color": "#ffffff"
+      }
+    },
+    {
+      "id": "track-artist-1",
+      "type": "text",
+      "props": {
+        "x": 12,
+        "y": 208,
+        "content": "Artist Name",
+        "fontSize": 12,
+        "color": "#808090"
+      }
+    },
+    {
+      "id": "player-bar",
+      "type": "frame",
+      "props": {
+        "x": 0,
+        "y": 780,
+        "width": 1440,
+        "height": 120,
+        "background": "rgba(20, 20, 30, 0.95)",
+        "borderTop": "1px solid rgba(255,255,255,0.1)"
+      }
+    },
+    {
+      "id": "player-album",
+      "type": "frame",
+      "props": {
+        "x": 24,
+        "y": 16,
+        "width": 64,
+        "height": 64,
+        "background": "#3a3a4a",
+        "borderRadius": 8
+      }
+    },
+    {
+      "id": "player-track-title",
+      "type": "text",
+      "props": {
+        "x": 104,
+        "y": 24,
+        "content": "Назва треку",
+        "fontSize": 15,
+        "fontWeight": 600,
+        "color": "#ffffff"
+      }
+    },
+    {
+      "id": "player-artist",
+      "type": "text",
+      "props": {
+        "x": 104,
+        "y": 48,
+        "content": "Ім'я виконавця",
+        "fontSize": 13,
+        "color": "#a0a0b0"
+      }
+    },
+    {
+      "id": "player-controls",
+      "type": "frame",
+      "props": {
+        "x": 520,
+        "y": 16,
+        "width": 400,
+        "height": 60
+      }
+    },
+    {
+      "id": "player-progress",
+      "type": "frame",
+      "props": {
+        "x": 520,
+        "y": 80,
+        "width": 400,
+        "height": 4,
+        "background": "#3a3a4a",
+        "borderRadius": 2
+      }
+    },
+    {
+      "id": "player-progress-fill",
+      "type": "frame",
+      "props": {
+        "x": 520,
+        "y": 80,
+        "width": 180,
+        "height": 4,
+        "background": "#667eea",
+        "borderRadius": 2
+      }
+    },
+    {
+      "id": "volume-control",
+      "type": "frame",
+      "props": {
+        "x": 1200,
+        "y": 50,
+        "width": 150,
+        "height": 20
+      }
+    }
+  ],
+  "styles": {
+    "glassmorphism": {
+      "background": "rgba(255,255,255,0.1)",
+      "backdropFilter": "blur(20px)",
+      "border": "1px solid rgba(255,255,255,0.1)"
+    },
+    "modern-gradient": {
+      "background": "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)"
+    },
+    "neon-accent": {
+      "color": "#00f0ff",
+      "textShadow": "0 0 20px rgba(0,240,255,0.5)"
+    }
+  }
+}

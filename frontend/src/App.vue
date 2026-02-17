@@ -2,12 +2,12 @@
   <div id="app">
     <div class="main-layout">
       <div v-if="isLoading" class="loading-screen">
-        <div class="spinner"></div>
-        <p>Loading...</p>
+        <div class="loader"></div>
+        <p>Завантаження...</p>
       </div>
       <div v-else-if="loadError" class="error-screen">
         <p>{{ loadError }}</p>
-        <button @click="retryLoad">Retry</button>
+        <button @click="retryLoad" class="btn btn-primary">Повторити</button>
       </div>
       <template v-else>
         <Sidebar />
@@ -45,7 +45,7 @@ const loadData = async () => {
     ])
   } catch (error) {
     console.error('Failed to load initial data:', error)
-    loadError.value = 'Failed to load data'
+    loadError.value = 'Не вдалося завантажити дані'
   } finally {
     isLoading.value = false
   }
@@ -57,53 +57,13 @@ const retryLoad = () => {
 </script>
 
 <style>
-:root {
-  --bg-primary: #121212;
-  --bg-secondary: #1f1f1f;
-  --bg-tertiary: #2d2d2d;
-  --surface: #282828;
-  --surface-hover: #3f3f3f;
-  --text-primary: #ffffff;
-  --text-secondary: #b3b3b3;
-  --text-tertiary: #a7a7a7;
-  --accent: #1db954;
-  --accent-hover: #1ed760;
-  --accent-active: #15853d;
-  --border-color: #3f3f3f;
-  --hover-bg: rgba(255, 255, 255, 0.1);
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-pill: 9999px;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
+@import './styles/main.css';
 
 #app {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
 
 .main-layout {
@@ -117,6 +77,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, #0f0f18 100%);
 }
 
 .loading-screen,
@@ -126,12 +87,12 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 24px;
 }
 
-.spinner {
-  width: 40px;
-  height: 40px;
+.loader {
+  width: 48px;
+  height: 48px;
   border: 3px solid var(--bg-tertiary);
   border-top-color: var(--accent);
   border-radius: 50%;
@@ -143,11 +104,18 @@ body {
 }
 
 .error-screen button {
-  padding: 8px 16px;
-  background: var(--accent);
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.error-screen button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
 }
 </style>
