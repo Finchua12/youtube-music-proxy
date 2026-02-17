@@ -1,10 +1,10 @@
-import { Howl, Howler } from 'howler'
 import { usePlayerStore } from '@/stores/player'
-import { downloadService } from '@/services/downloadService'
 
 class AudioPlayerService {
-  private sound: Howl | null = null
+  private player: YT.Player | null = null
+  private playerContainer: HTMLDivElement | null = null
   private _playerStore: ReturnType<typeof usePlayerStore> | null = null
+  private isReady = false
 
   private get playerStore() {
     if (!this._playerStore) {
@@ -13,204 +13,132 @@ class AudioPlayerService {
     return this._playerStore
   }
 
-  // Initialize audio player
   initialize() {
-    // Set up Howler global settings
-    Howler.volume(this.playerStore.volume)
-    Howler.mute(this.playerStore.isMuted)
+    this.createPlayerContainer()
+    this.loadYouTubeAPI()
   }
 
-  // Play audio for a track
-  async playTrack(track: any) {
-    try {
-      // Download the audio file
-      const url = await downloadService.downloadAudio(track.id, '192k')
+  private createPlayerContainer() {
+    if (document.getElementById('youtube-player-container')) return
+    
+    this.playerContainer = document.createElement('div')
+    this.playerContainer.id = 'youtube-player-container'
+    this.playerContainer.style.display = 'none'
+    document.body.appendChild(this.playerContainer)
+  }
 
-      // Stop current sound if playing
-      if (this.sound) {
-        this.sound.stop()
-        this.sound.unload()
-      }
+  private loadYouTubeAPI() {
+    if ((window as any).YT) {
+      this.initPlayer()
+      return
+    }
 
-      // Create new sound
-      this.sound = new Howl({
-        src: [url],
-        html5: true, // Use HTML5 Audio for streaming
-        volume: this.playerStore.volume,
+    const tag = document.createElement('script')
+    tag.src = 'https://www.youtube.com/iframe_api'
+    const firstScriptTag = document.getElementsByTagName('script')[0]
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
 
-        onplay: () => {
-          console.log('Audio started playing')
+    ;(window as any).onYouTubeIframeAPIReady = () => {
+      this.initPlayer()
+    }
+  }
+
+  private initPlayer() {
+    if (!this.playerContainer) return
+    
+    this.player = new (window as any).YT.Player(this.playerContainer, {
+      height: '0',
+      width: '0',
+      playerVars: {
+        autoplay: 1,
+        controls: 0,
+        disablekb: 1,
+        fs: 0,
+        modestbranding: 1,
+        rel: 0,
+        showinfo: 0,
+        iv_load_policy: 3
+      },
+      events: {
+        onReady: () => {
+          this.isReady = true
+          console.log('YouTube player ready')
         },
-
-        onpause: () => {
-          console.log('Audio paused')
-        },
-
-        onstop: () => {
-          console.log('Audio stopped')
-        },
-
-        onend: () => {
-          console.log('Audio finished')
-          this.handleTrackEnd()
-        },
-
-        onload: () => {
-          console.log('Audio loaded')
-        },
-
-        onloaderror: (id, error) => {
-          console.error('Audio load error:', error)
-        },
-
-        onplayerror: (id, error) => {
-          console.error('Audio play error:', error)
+        onStateChange: (event: any) => {
+          if (event.data === (window as any).YT.PlayerState.ENDED) {
+            this.handleTrackEnd()
+          }
         }
-      })
+      }
+    })
+  }
 
-      // Play the sound
-      this.sound.play()
+  async playTrack(track: any) {
+    if (!this.isReady || !this.player) {
+      console.error('Player not ready')
+      throw new Error('Player not ready')
+    }
+
+    try {
+      await this.player.loadVideoById({
+        videoId: track.id,
+        startSeconds: 0
+      })
+      console.log('Playing:', track.title)
     } catch (error) {
       console.error('Failed to play track:', error)
       throw error
     }
   }
 
-  // Play audio from URL (for backward compatibility)
-  async play(url: string) {
-    // Stop current sound if playing
-    if (this.sound) {
-      this.sound.stop()
-      this.sound.unload()
-    }
-
-    // Create new sound
-    this.sound = new Howl({
-      src: [url],
-      html5: true, // Use HTML5 Audio for streaming
-      volume: this.playerStore.volume,
-
-      onplay: () => {
-        console.log('Audio started playing')
-      },
-
-      onpause: () => {
-        console.log('Audio paused')
-      },
-
-      onstop: () => {
-        console.log('Audio stopped')
-      },
-
-      onend: () => {
-        console.log('Audio finished')
-        this.handleTrackEnd()
-      },
-
-      onload: () => {
-        console.log('Audio loaded')
-      },
-
-      onloaderror: (id, error) => {
-        console.error('Audio load error:', error)
-      },
-
-      onplayerror: (id, error) => {
-        console.error('Audio play error:', error)
-      }
-    })
-
-    // Play the sound
-    this.sound.play()
-  }
-
-  // Pause current audio
   pause() {
-    if (this.sound && this.sound.playing()) {
-      this.sound.pause()
-    }
+    this.player?.pauseVideo()
   }
 
-  // Resume current audio
   resume() {
-    if (this.sound && !this.sound.playing()) {
-      this.sound.play()
-    }
+    this.player?.playVideo()
   }
 
-  // Stop current audio
   stop() {
-    if (this.sound) {
-      this.sound.stop()
-    }
+    this.player?.stopVideo()
   }
 
-  // Seek to position (in seconds)
   seek(position: number) {
-    if (this.sound) {
-      this.sound.seek(position)
-    }
+    this.player?.seekTo(position, true)
   }
 
-  // Get current position (in seconds)
   getPosition(): number {
-    if (this.sound) {
-      return this.sound.seek() as number
-    }
-    return 0
+    return this.player?.getCurrentTime() || 0
   }
 
-  // Get duration (in seconds)
   getDuration(): number {
-    if (this.sound) {
-      return this.sound.duration()
-    }
-    return 0
+    return this.player?.getDuration() || 0
   }
 
-  // Set volume (0-1)
   setVolume(volume: number) {
-    Howler.volume(volume)
-    if (this.sound) {
-      this.sound.volume(volume)
-    }
+    this.player?.setVolume(volume * 100)
   }
 
-  // Mute/unmute
   setMute(muted: boolean) {
-    Howler.mute(muted)
+    if (muted) {
+      this.player?.mute()
+    } else {
+      this.player?.unmute()
+    }
   }
 
-  // Check if playing
   isPlaying(): boolean {
-    return this.sound ? this.sound.playing() : false
+    return this.player?.getPlayerState() === 1
   }
 
-  // Handle track end
   private handleTrackEnd() {
-    // If repeat mode is 'one', replay current track
-    if (this.playerStore.repeatMode === 'one') {
-      if (this.playerStore.currentTrack) {
-        // Replay current track
-        // In a real implementation, this would trigger a download and play
-        console.log('Repeating current track')
-      }
-    }
-    // If repeat mode is 'all' or no repeat, go to next track
-    else {
-      this.playerStore.nextTrack()
-    }
+    this.playerStore.nextTrack()
   }
 
-  // Clean up resources
   destroy() {
-    if (this.sound) {
-      this.sound.stop()
-      this.sound.unload()
-      this.sound = null
-    }
+    this.player?.destroy()
+    this.playerContainer?.remove()
   }
 }
 
-// Export singleton instance
 export const audioPlayer = new AudioPlayerService()
