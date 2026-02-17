@@ -162,56 +162,36 @@ const totalTracks = computed(() => playlist.value.tracks.length)
 
 // Load playlist data
 onMounted(async () => {
-  // In a real implementation, this would fetch the actual playlist data
-  // For now, we'll use mock data
-  playlist.value = {
-    id: props.id || '1',
-    name: 'Мої улюблені треки',
-    creator: 'Користувач',
-    tracks: [
-      {
-        id: '1',
-        title: 'Bohemian Rhapsody',
-        artist: 'Queen',
-        album: 'A Night at the Opera',
-        albumArt: '',
-        duration: 354,
-        addedDate: '2024-01-15',
-        liked: true
-      },
-      {
-        id: '2',
-        title: 'Stairway to Heaven',
-        artist: 'Led Zeppelin',
-        album: 'Led Zeppelin IV',
-        albumArt: '',
-        duration: 482,
-        addedDate: '2024-01-10',
-        liked: false
-      },
-      {
-        id: '3',
-        title: 'Hotel California',
-        artist: 'Eagles',
-        album: 'Hotel California',
-        albumArt: '',
-        duration: 390,
-        addedDate: '2024-01-05',
-        liked: true
-      },
-      {
-        id: '4',
-        title: 'Sweet Child O\' Mine',
-        artist: 'Guns N\' Roses',
-        album: 'Appetite for Destruction',
-        albumArt: '',
-        duration: 356,
-        addedDate: '2023-12-20',
-        liked: false
-      }
-    ],
-    totalDuration: 1582,
-    image: ''
+  // Check if this is favorites playlist
+  if (props.id === 'favorites') {
+    const likedTracks = playerStore.getLikedTracks ? playerStore.getLikedTracks() : []
+    playlist.value = {
+      id: 'favorites',
+      name: 'Улюблені',
+      creator: 'Користувач',
+      tracks: likedTracks,
+      totalDuration: likedTracks.reduce((sum: number, t: any) => sum + (t.duration || 0), 0),
+      image: ''
+    }
+    isLiked.value = true
+  } else if (props.id === 'recent') {
+    playlist.value = {
+      id: 'recent',
+      name: 'Нещодавно',
+      creator: 'Користувач',
+      tracks: playerStore.recentlyPlayed || [],
+      totalDuration: (playerStore.recentlyPlayed || []).reduce((sum: number, t: any) => sum + (t.duration || 0), 0),
+      image: ''
+    }
+  } else {
+    playlist.value = {
+      id: props.id || '1',
+      name: 'Плейлист',
+      creator: 'Користувач',
+      tracks: [],
+      totalDuration: 0,
+      image: ''
+    }
   }
 })
 

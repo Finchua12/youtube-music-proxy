@@ -141,14 +141,29 @@ export const usePlayerStore = defineStore('player', () => {
     isShuffled.value = !isShuffled.value
   }
 
-  const toggleLike = (trackId: string) => {
-    if (likedTracks.value.has(trackId)) {
+  const toggleLike = (track: any) => {
+    const trackId = track.id || track
+    const existing = likedTracks.value.get(trackId)
+    
+    if (existing) {
       likedTracks.value.delete(trackId)
     } else {
-      likedTracks.value.add(trackId)
+      // Store full track info
+      likedTracks.value.set(trackId, {
+        id: trackId,
+        title: track.title || 'Unknown',
+        artist: track.artist || 'Unknown',
+        thumbnail: track.thumbnail || '',
+        duration: track.duration || 0
+      })
     }
     // Save to localStorage
-    localStorage.setItem('likedTracks', JSON.stringify([...likedTracks.value]))
+    const tracksArray = Array.from(likedTracks.value.values())
+    localStorage.setItem('likedTracks', JSON.stringify(tracksArray))
+  }
+
+  const getLikedTracks = () => {
+    return Array.from(likedTracks.value.values())
   }
 
   const search = async (query: string, maxResults: number = 10) => {
@@ -233,7 +248,8 @@ export const usePlayerStore = defineStore('player', () => {
     try {
       const saved = localStorage.getItem('likedTracks')
       if (saved) {
-        likedTracks.value = new Set(JSON.parse(saved))
+        const tracks = JSON.parse(saved)
+        likedTracks.value = new Map(tracks.map((t: any) => [t.id, t]))
       }
     } catch (error) {
       console.error('Failed to load liked tracks:', error)
@@ -242,6 +258,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   const isTrackLiked = (trackId: string) => {
     return likedTracks.value.has(trackId)
+  }
   }
 
   const formatTime = (seconds: number): string => {
@@ -292,6 +309,7 @@ export const usePlayerStore = defineStore('player', () => {
     toggleRepeat,
     toggleShuffle,
     toggleLike,
+    getLikedTracks,
     search,
     loadPlaylists,
     loadRecentlyPlayed,

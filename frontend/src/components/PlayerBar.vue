@@ -158,7 +158,7 @@ const togglePlayPause = () => {
 
 const toggleLike = () => {
   if (playerStore.currentTrack) {
-    playerStore.toggleLike(playerStore.currentTrack.id)
+    playerStore.toggleLike(playerStore.currentTrack)
   }
 }
 
