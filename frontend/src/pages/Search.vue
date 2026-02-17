@@ -185,11 +185,34 @@ const searchFilters = [
   { id: 'playlists', name: 'Плейлисти' }
 ]
 
-const recentSearches = ref([
-  { id: '1', query: 'Queen' },
-  { id: '2', query: 'Bohemian Rhapsody' },
-  { id: '3', query: 'Rock classics' }
-])
+const recentSearches = ref<{id: string, query: string}[]>([])
+
+const loadRecentSearches = () => {
+  try {
+    const saved = localStorage.getItem('searchHistory')
+    if (saved) {
+      recentSearches.value = JSON.parse(saved)
+    }
+  } catch (e) {
+    console.error('Failed to load search history')
+  }
+}
+
+const saveRecentSearch = (query: string) => {
+  const filtered = recentSearches.value.filter(s => s.query !== query)
+  recentSearches.value = [{ id: Date.now().toString(), query }, ...filtered].slice(0, 10)
+  localStorage.setItem('searchHistory', JSON.stringify(recentSearches.value))
+}
+
+const clearRecentSearches = () => {
+  recentSearches.value = []
+  localStorage.removeItem('searchHistory')
+}
+
+const removeRecentSearch = (id: string) => {
+  recentSearches.value = recentSearches.value.filter(s => s.id !== id)
+  localStorage.setItem('searchHistory', JSON.stringify(recentSearches.value))
+}
 
 const trendingSearches = ref([
   { id: '1', query: 'The Beatles' },
@@ -205,23 +228,27 @@ const searchResults = reactive({
   playlists: [] as any[]
 })
 
+onMounted(() => {
+  loadRecentSearches()
+})
+
 // Methods
 const handleSearch = async () => {
   if (searchQuery.value.length > 2) {
     isLoading.value = true
     try {
       const results = await playerStore.search(searchQuery.value, 20)
-      // Group results by type (simplified for now)
       searchResults.tracks = results.slice(0, 10)
-      searchResults.artists = [] // Would be extracted from results
-      searchResults.playlists = [] // Would be extracted from results
+      searchResults.artists = []
+      searchResults.playlists = []
+      // Save to search history
+      saveRecentSearch(searchQuery.value)
     } catch (error) {
       console.error('Search failed:', error)
     } finally {
       isLoading.value = false
     }
   } else {
-    // Clear results if query is too short
     searchResults.tracks = []
     searchResults.artists = []
     searchResults.playlists = []
