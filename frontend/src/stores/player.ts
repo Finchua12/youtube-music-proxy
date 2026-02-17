@@ -259,7 +259,6 @@ export const usePlayerStore = defineStore('player', () => {
   const isTrackLiked = (trackId: string) => {
     return likedTracks.value.has(trackId)
   }
-  }
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
