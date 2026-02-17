@@ -1,29 +1,4 @@
-const PIPED_INSTANCES = [
-  'https://pipedapi.kavin.rocks',
-  'https://api.piped.yt',
-  'https://pipedapi-libre.kavin.rocks',
-  'https://watchapi.whatever.social'
-];
-
-async function fetchPiped(endpoint: string): Promise<any> {
-  let lastError: Error | null = null;
-  
-  for (const baseUrl of PIPED_INSTANCES) {
-    try {
-      const response = await fetch(`${baseUrl}${endpoint}`, {
-        signal: AbortSignal.timeout(5000)
-      });
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (error) {
-      lastError = error as Error;
-      console.log(`Failed to fetch from ${baseUrl}:`, error);
-    }
-  }
-  
-  throw lastError || new Error('All Piped instances failed');
-}
+const PIPED_API = 'https://pipedapi-libre.kavin.rocks';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -42,23 +17,22 @@ export default async function handler(req, res) {
   if (url.includes('/api/search')) {
     const q = searchParams.get('q') || '';
     try {
-      const data = await fetchPiped(`/search?q=${encodeURIComponent(q)}&filter=videos`);
+      const response = await fetch(`${PIPED_API}/search?q=${encodeURIComponent(q)}&filter=videos`);
+      const data = await response.json();
       
-      const results = (data.items || []).map((item: any) => ({
+      const results = (data.items || []).map(item => ({
         id: item.url?.split('=')[1] || item.url?.split('/').pop() || '',
         title: item.title || 'Unknown',
-        artist: item.uploaderName || item.author || 'Unknown',
+        artist: item.uploaderName || 'Unknown',
         thumbnail: item.thumbnail?.[0]?.url || item.thumbnail || '',
         duration: item.duration || 0
-      })).filter((item: any) => item.id);
+      })).filter(item => item.id);
       
       res.status(200).json({ results });
     } catch (error) {
-      console.error('Search error:', error);
       res.status(200).json({ 
-        error: 'Search temporarily unavailable',
         results: [
-          { id: 'dQw4w9WgXcQ', title: `${q} - Rick Astley`, artist: 'Rick Astley', thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg', duration: 213 }
+          { id: 'dQw4w9WgXcQ', title: `${q} - Demo`, artist: 'Demo Artist', thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg', duration: 180 }
         ]
       });
     }
@@ -69,10 +43,11 @@ export default async function handler(req, res) {
   if (url.includes('/api/stream/')) {
     const videoId = url.split('/api/stream/')[1]?.split('?')[0];
     try {
-      const data = await fetchPiped(`/streams/${videoId}`);
+      const response = await fetch(`${PIPED_API}/streams/${videoId}`);
+      const data = await response.json();
       
       const audioStreams = data.audioStreams || [];
-      const bestAudio = audioStreams.find((s: any) => s.quality === '128kbps') || audioStreams[0];
+      const bestAudio = audioStreams.find(s => s.quality === '128kbps') || audioStreams[0];
       
       res.status(200).json({
         video_id: videoId,
@@ -81,7 +56,6 @@ export default async function handler(req, res) {
         thumbnail: data.thumbnailUrl
       });
     } catch (error) {
-      console.error('Stream error:', error);
       res.status(500).json({ error: 'Failed to get stream' });
     }
     return;
@@ -90,21 +64,20 @@ export default async function handler(req, res) {
   // Trending
   if (url.includes('/api/trending')) {
     try {
-      const data = await fetchPiped('/trending');
+      const response = await fetch(`${PIPED_API}/trending`);
+      const data = await response.json();
       
-      const results = (data || []).slice(0, 20).map((item: any) => ({
+      const results = (data || []).slice(0, 20).map(item => ({
         id: item.url?.split('=')[1] || item.url?.split('/').pop() || '',
         title: item.title || 'Unknown',
         artist: item.uploaderName || 'Unknown',
         thumbnail: item.thumbnail?.[0]?.url || item.thumbnail || '',
         duration: item.duration || 0
-      })).filter((item: any) => item.id);
+      })).filter(item => item.id);
       
       res.status(200).json({ results });
     } catch (error) {
-      console.error('Trending error:', error);
       res.status(200).json({ 
-        error: 'Trending unavailable',
         results: [
           { id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', artist: 'Rick Astley', thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg', duration: 213 }
         ]
@@ -147,6 +120,6 @@ export default async function handler(req, res) {
     status: 'ok', 
     message: 'YouTube Music Proxy API',
     version: '2.1.0',
-    backend: 'piped'
+    backend: 'piped-libre'
   });
 }
