@@ -168,9 +168,47 @@ export const usePlayerStore = defineStore('player', () => {
       const saved = localStorage.getItem('playlists')
       if (saved) {
         playlists.value = JSON.parse(saved)
+      } else {
+        // Default playlists
+        playlists.value = [
+          { id: 'favorites', name: 'Улюблені', tracks: [] },
+          { id: 'recent', name: 'Нещодавно', tracks: [] }
+        ]
+        savePlaylists()
       }
     } catch (error) {
       console.error('Failed to load playlists:', error)
+    }
+  }
+
+  const savePlaylists = () => {
+    localStorage.setItem('playlists', JSON.stringify(playlists.value))
+  }
+
+  const createPlaylist = (name: string) => {
+    const newPlaylist = {
+      id: 'playlist_' + Date.now(),
+      name: name,
+      tracks: []
+    }
+    playlists.value.push(newPlaylist)
+    savePlaylists()
+    return newPlaylist
+  }
+
+  const addToPlaylist = (playlistId: string, track: any) => {
+    const playlist = playlists.value.find(p => p.id === playlistId)
+    if (playlist && !playlist.tracks.find(t => t.id === track.id)) {
+      playlist.tracks.push(track)
+      savePlaylists()
+    }
+  }
+
+  const removeFromPlaylist = (playlistId: string, trackId: string) => {
+    const playlist = playlists.value.find(p => p.id === playlistId)
+    if (playlist) {
+      playlist.tracks = playlist.tracks.filter(t => t.id !== trackId)
+      savePlaylists()
     }
   }
 
